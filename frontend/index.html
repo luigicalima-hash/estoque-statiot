@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statiot - Gestão de Estoque</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        .status-repor { background-color: #ffcccc; color: #900; font-weight: bold; }
+        .status-ok { background-color: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Statiot - Controle de Estoque (v2.0)</h1>
+    <p>Dados consumidos em tempo real da API na nuvem.</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Item</th>
+                <th>Saldo Atual</th>
+                <th>Estoque Mínimo</th>
+                <th>Status</th>
+            </tr>
+        <tbody id="tabela-corpo">
+            <!-- Os dados da API vão entrar aqui automaticamente -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // URL do seu túnel gerado no Google Colab
+    const API_URL = 'https://estoque-statiot.onrender.com';
+
+    async function carregarEstoque() {
+        try {
+            const resposta = await fetch(API_URL);
+            const dados = await resposta.json();
+            
+            const tbody = document.getElementById('tabela-corpo');
+            tbody.innerHTML = '';
+
+            dados.forEach(item => {
+                const classeStatus = item.Status === 'Repor' ? 'status-repor' : 'status-ok';
+                
+                const linha = `
+                    <tr>
+                        <td>${item.Codigo}</td>
+                        <td>${item.Item}</td>
+                        <td>${item.Saldo}</td>
+                        <td>${item.EstoqueMinimo}</td>
+                        <td class="${classeStatus}">${item.Status}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += linha;
+            });
+        } catch (erro) {
+            console.error('Erro ao carregar dados da API:', erro);
+            alert('Não foi possível conectar à API. Verifique se o Google Colab ainda está rodando.');
+        }
+    }
+
+    // Carrega os dados assim que a página abrir
+    carregarEstoque();
+</script>
+
+</body>
+</html>
