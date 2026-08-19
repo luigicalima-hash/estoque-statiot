@@ -4,45 +4,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Statiot - Gestão de Estoque</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #333; text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #007bff; color: white; }
-        .status-repor { background-color: #ffcccc; color: #900; font-weight: bold; }
-        .status-ok { background-color: #d4edda; color: #155724; }
-    </style>
+    <!-- Importação da fonte moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <!-- Elementos de fundo Glow -->
+    <div class="glow-bg glow-1"></div>
+    <div class="glow-bg glow-2"></div>
+
 <div class="container">
-    <h1>Statiot - Controle de Estoque (v2.0)</h1>
-    <p>Dados consumidos em tempo real da API na nuvem.</p>
+    <!-- Cabeçalho com Logo à esquerda e Statitot centralizado -->
+    <header class="app-header">
+        <div class="logo-container">
+            <!-- Insira sua logo aqui (substitua a tag ou coloque sua imagem) -->
+            <label for="logo-input" class="logo-upload-box" title="Clique para adicionar a logo da empresa">
+                <input type="file" id="logo-input" accept="image/*" style="display: none;" onchange="carregarLogo(event)">
+                <span id="logo-placeholder"><i class="fa-solid fa-image"></i> Logo</span>
+                <img id="logo-preview" src="" alt="Logo" style="display: none;">
+            </label>
+        </div>
+        <div class="header-titles">
+            <h1>Statiot</h1>
+            <h2>Controle de Estoque</h2>
+            <p>Gestão relacional em nuvem integrada com FastAPI e SQLite</p>
+        </div>
+    </header>
     
-    <table>
-        <thead>
-            <tr>
-                <th>Código</th>
-                <th>Item</th>
-                <th>Saldo Atual</th>
-                <th>Estoque Mínimo</th>
-                <th>Status</th>
-            </tr>
-        <tbody id="tabela-corpo">
-            <!-- Os dados da API vão entrar aqui automaticamente -->
-        </tbody>
-    </table>
+    <!-- Formulários de Ação -->
+    <div class="forms-grid">
+        <!-- Cadastrar Item -->
+        <div class="glass-panel">
+            <h3><i class="fa-solid fa-box-archive"></i> Novo Item</h3>
+            <form id="form-item">
+                <label>Código:</label>
+                <input type="text" id="item-codigo" placeholder="Ex: M8x40" required>
+                
+                <label>Nome do Item:</label>
+                <input type="text" id="item-nome" placeholder="Ex: Parafuso M8x40" required>
+                
+                <label>Estoque Mínimo:</label>
+                <input type="number" id="item-minimo" placeholder="Ex: 100" required>
+                
+                <button type="submit"><i class="fa-solid fa-plus"></i> Cadastrar Item</button>
+            </form>
+        </div>
+
+        <!-- Registrar Movimentação -->
+        <div class="glass-panel">
+            <h3><i class="fa-solid fa-right-left"></i> Lançar Movimentação</h3>
+            <form id="form-mov">
+                <label>Código do Item:</label>
+                <input type="text" id="mov-codigo" placeholder="Ex: M8x30" required>
+                
+                <label>Tipo de Movimentação:</label>
+                <!-- Seletor estilo Toggle / Botões de 1 clique -->
+                <div class="tipo-toggle-group">
+                    <input type="radio" id="tipo-entrada" name="mov-tipo" value="Entrada" checked>
+                    <label for="tipo-entrada" class="toggle-btn entrada-btn"><i class="fa-solid fa-arrow-down"></i> Entrada</label>
+
+                    <input type="radio" id="tipo-saida" name="mov-tipo" value="Saída">
+                    <label for="tipo-saida" class="toggle-btn saida-btn"><i class="fa-solid fa-arrow-up"></i> Saída</label>
+                </div>
+                
+                <label>Quantidade:</label>
+                <input type="number" id="mov-qtd" placeholder="Ex: 50" required>
+                
+                <button type="submit"><i class="fa-solid fa-paper-plane"></i> Registrar Lançamento</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Estoque em Tempo Real -->
+    <div class="table-wrapper">
+        <div class="table-header">
+            <h3><i class="fa-solid fa-chart-line"></i> Saldo Atual em Tempo Real</h3>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Item</th>
+                        <th>Saldo Atual</th>
+                        <th>Estoque Mínimo</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-corpo">
+                    <!-- Preenchido via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-<script>
-    // URL do seu túnel gerado no Google Colab
-const API_URL = 'https://estoque-statiot.onrender.com/api/estoque';
+<footer>
+    <p>Statiot Inventory Systems &copy; 2026 — Todos os direitos reservados.</p>
+</footer>
 
+<script>
+    const API_URL = 'https://estoque-statiot.onrender.com';
+
+    // Função para pré-visualizar a logo da empresa enviada pelo usuário
+    function carregarLogo(event) {
+        const reader = new FileReader();
+        reader.onload = function(){
+            const output = document.getElementById('logo-preview');
+            const placeholder = document.getElementById('logo-placeholder');
+            output.src = reader.result;
+            output.style.display = 'block';
+            placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    // 1. Carregar dados do estoque
     async function carregarEstoque() {
         try {
-            const resposta = await fetch(API_URL);
+            const resposta = await fetch(`${API_URL}/api/estoque`);
             const dados = await resposta.json();
             
             const tbody = document.getElementById('tabela-corpo');
@@ -50,25 +133,75 @@ const API_URL = 'https://estoque-statiot.onrender.com/api/estoque';
 
             dados.forEach(item => {
                 const classeStatus = item.Status === 'Repor' ? 'status-repor' : 'status-ok';
+                const iconeStatus = item.Status === 'Repor' ? '<i class="fa-solid fa-triangle-exclamation"></i> Repor' : '<i class="fa-solid fa-check"></i> OK';
                 
                 const linha = `
                     <tr>
-                        <td>${item.Codigo}</td>
+                        <td><strong>${item.Codigo}</strong></td>
                         <td>${item.Item}</td>
                         <td>${item.Saldo}</td>
                         <td>${item.EstoqueMinimo}</td>
-                        <td class="${classeStatus}">${item.Status}</td>
+                        <td><span class="status-badge ${classeStatus}">${iconeStatus}</span></td>
                     </tr>
                 `;
                 tbody.innerHTML += linha;
             });
         } catch (erro) {
-            console.error('Erro ao carregar dados da API:', erro);
-            alert('Não foi possível conectar à API. Verifique se o Google Colab ainda está rodando.');
+            console.error('Erro ao carregar dados:', erro);
         }
     }
 
-    // Carrega os dados assim que a página abrir
+    // 2. Evento para Cadastrar Novo Item
+    document.getElementById('form-item').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            codigo: document.getElementById('item-codigo').value,
+            nome: document.getElementById('item-nome').value,
+            estoque_minimo: parseInt(document.getElementById('item-minimo').value)
+        };
+
+        const res = await fetch(`${API_URL}/api/itens`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert('Item cadastrado com sucesso!');
+            document.getElementById('form-item').reset();
+            carregarEstoque();
+        } else {
+            const err = await res.json();
+            alert('Erro: ' + (err.detail || 'Não foi possível cadastrar.'));
+        }
+    });
+
+    // 3. Evento para Registrar Movimentação
+    document.getElementById('form-mov').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const tipoSelecionado = document.querySelector('input[name="mov-tipo"]:checked').value;
+        const payload = {
+            codigo_item: document.getElementById('mov-codigo').value,
+            tipo: tipoSelecionado,
+            quantidade: parseInt(document.getElementById('mov-qtd').value)
+        };
+
+        const res = await fetch(`${API_URL}/api/movimentacoes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert('Movimentação registrada com sucesso!');
+            document.getElementById('form-mov').reset();
+            carregarEstoque();
+        } else {
+            const err = await res.json();
+            alert('Erro: ' + (err.detail || 'Não foi possível registrar.'));
+        }
+    });
+
     carregarEstoque();
 </script>
 
