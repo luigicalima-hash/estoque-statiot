@@ -69,7 +69,7 @@ class ItemCreate(BaseModel):
 class MovimentacaoCreate(BaseModel):
     codigo_item: str
     tipo: str  # 'Entrada' ou 'Saída'
-    quantidade: int
+    quantidade: int = Field(..., gt=0, description="A quantidade deve ser maior que zero")
 
 # 1. Rota de Listagem do Estoque (Calcula o Saldo via SQL)
 @app.get("/api/estoque")

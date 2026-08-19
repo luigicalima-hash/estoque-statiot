@@ -70,8 +70,8 @@
                     <label for="tipo-saida" class="toggle-btn saida-btn"><i class="fa-solid fa-arrow-up"></i> Saída</label>
                 </div>
                 
-                <label>Quantidade:</label>
-                <input type="number" id="mov-qtd" placeholder="Ex: 50" required>
+               <label>Quantidade:</label>
+                    <input type="number" id="mov-qtd" placeholder="Ex: 50" min="1" required>
                 
                 <button type="submit"><i class="fa-solid fa-paper-plane"></i> Registrar Lançamento</button>
             </form>
@@ -177,30 +177,40 @@
     });
 
     // 3. Evento para Registrar Movimentação
-    document.getElementById('form-mov').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const tipoSelecionado = document.querySelector('input[name="mov-tipo"]:checked').value;
-        const payload = {
-            codigo_item: document.getElementById('mov-codigo').value,
-            tipo: tipoSelecionado,
-            quantidade: parseInt(document.getElementById('mov-qtd').value)
-        };
+   // 3. Evento para Registrar Movimentação
+document.getElementById('form-mov').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const qtdInput = parseInt(document.getElementById('mov-qtd').value);
+    
+    // Trava de segurança no Front contra números negativos ou zero
+    if (isNaN(qtdInput) || qtdInput <= 0) {
+        alert('Por favor, insira uma quantidade válida maior que zero.');
+        return;
+    }
 
-        const res = await fetch(`${API_URL}/api/movimentacoes`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+    const tipoSelecionado = document.querySelector('input[name="mov-tipo"]:checked').value;
+    const payload = {
+        codigo_item: document.getElementById('mov-codigo').value,
+        tipo: tipoSelecionado,
+        quantidade: qtdInput
+    };
 
-        if (res.ok) {
-            alert('Movimentação registrada com sucesso!');
-            document.getElementById('form-mov').reset();
-            carregarEstoque();
-        } else {
-            const err = await res.json();
-            alert('Erro: ' + (err.detail || 'Não foi possível registrar.'));
-        }
+    const res = await fetch(`${API_URL}/api/movimentacoes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
     });
+
+    if (res.ok) {
+        alert('Movimentação registrada com sucesso!');
+        document.getElementById('form-mov').reset();
+        carregarEstoque();
+    } else {
+        const err = await res.json();
+        alert('Erro: ' + (err.detail || 'Não foi possível registrar.'));
+    }
+});
 
     carregarEstoque();
 </script>
