@@ -4,5 +4,6 @@ services:
     runtime: python
     region: ohio
     plan: free
-    buildCommand: cd backend && python3 -m pip install -r requirements.txt
-    startCommand: cd backend && python3 -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    rootDir: backend
+    buildCommand: python3 -m venv .venv && .venv/bin/python -m pip install --upgrade pip && .venv/bin/pip install -r requirements.txt
+    startCommand: .venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port $PORT
