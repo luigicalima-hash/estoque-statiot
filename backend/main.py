@@ -1,20 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import sqlite3
-import os
+from datetime import date
 
 app = FastAPI(title="Statiot Inventory API")
 
-# Habilita o CORS para que o seu Frontend (no GitHub Pages) consiga conversar com esta API
+# Habilita o CORS para permitir requisições do seu frontend (GitHub Pages)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Em produção, você pode restringir para o domínio do seu site
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Caminho para o banco de dados SQLite
 DB_PATH = "estoque.db"
 
 def get_db_connection():
@@ -22,12 +22,10 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-# Inicializa o banco de dados e insere dados de exemplo se estiver vazio
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Tabela de Itens
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS itens (
             codigo TEXT PRIMARY KEY,
@@ -36,7 +34,6 @@ def init_db():
         )
     ''')
 
-    # Tabela de Movimentações
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS movimentacoes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,7 +45,7 @@ def init_db():
         )
     ''')
 
-    # Dados iniciais de teste
+    # Dados iniciais se estiver vazio
     cursor.execute("INSERT OR IGNORE INTO itens (codigo, nome, estoque_minimo) VALUES ('M8x30', 'Parafuso sextavado M8x30', 200)")
     cursor.execute("INSERT OR IGNORE INTO itens (codigo, nome, estoque_minimo) VALUES ('CH3', 'Chapa aço carbono 3mm', 10)")
 
@@ -61,10 +58,20 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Executa a inicialização ao subir o servidor
 init_db()
 
-# Rota principal da API (O substituto robusto das fórmulas de planilha)
+# Modelos de Dados (Validação com Pydantic)
+class ItemCreate(BaseModel):
+    codigo: str
+    nome: str
+    estoque_minimo: int
+
+class MovimentacaoCreate(BaseModel):
+    codigo_item: str
+    tipo: str  # 'Entrada' ou 'Saída'
+    quantidade: int
+
+# 1. Rota de Listagem do Estoque (Calcula o Saldo via SQL)
 @app.get("/api/estoque")
 def get_estoque():
     conn = get_db_connection()
@@ -91,3 +98,44 @@ def get_estoque():
     rows = [dict(row) for row in cursor.fetchall()]
     conn.close()
     return rows
+
+# 2. Rota para Cadastrar Novo Item
+@app.post("/api/itens")
+def criar_item(item: ItemCreate):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO itens (codigo, nome, estoque_minimo) VALUES (?, ?, ?)",
+            (item.codigo, item.nome, item.estoque_minimo)
+        )
+        conn.commit()
+    except sqlite3.IntegrityError:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Este código de item já existe.")
+    conn.close()
+    return {"mensagem": "Item cadastrado com sucesso!", "codigo": item.codigo}
+
+# 3. Rota para Registrar Movimentação (Entrada ou Saída)
+@app.post("/api/movimentacoes")
+def criar_movimentacao(mov: MovimentacaoCreate):
+    if mov.tipo not in ["Entrada", "Saída"]:
+        raise HTTPException(status_code=400, detail="Tipo deve ser 'Entrada' ou 'Saída'.")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Verifica se o item existe
+    cursor.execute("SELECT codigo FROM itens WHERE codigo = ?", (mov.codigo_item,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Item não encontrado no cadastro.")
+    
+    data_atual = str(date.today())
+    cursor.execute(
+        "INSERT INTO movimentacoes (data, codigo_item, tipo, quantidade) VALUES (?, ?, ?, ?)",
+        (data_atual, mov.codigo_item, mov.tipo, mov.quantidade)
+    )
+    conn.commit()
+    conn.close()
+    return {"mensagem": "Movimentação registrada com sucesso!"}
