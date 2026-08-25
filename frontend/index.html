@@ -92,6 +92,7 @@
                         <th>Saldo Atual</th>
                         <th>Estoque Mínimo</th>
                         <th>Status</th>
+                        <th>Ações</th> <!-- Coluna nova para o botão de etiqueta -->
                     </tr>
                 </thead>
                 <tbody id="tabela-corpo">
@@ -142,6 +143,11 @@
                         <td>${item.Saldo}</td>
                         <td>${item.EstoqueMinimo}</td>
                         <td><span class="status-badge ${classeStatus}">${iconeStatus}</span></td>
+                        <td>
+                            <a href="${API_URL}/api/etiqueta/${item.Codigo}" target="_blank" class="btn-etiqueta" title="Baixar Etiqueta em PDF com QR Code">
+                                <i class="fa-solid fa-qrcode"></i> Etiqueta
+                            </a>
+                        </td>
                     </tr>
                 `;
                 tbody.innerHTML += linha;
@@ -177,40 +183,39 @@
     });
 
     // 3. Evento para Registrar Movimentação
-   // 3. Evento para Registrar Movimentação
-document.getElementById('form-mov').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const qtdInput = parseInt(document.getElementById('mov-qtd').value);
-    
-    // Trava de segurança no Front contra números negativos ou zero
-    if (isNaN(qtdInput) || qtdInput <= 0) {
-        alert('Por favor, insira uma quantidade válida maior que zero.');
-        return;
-    }
+    document.getElementById('form-mov').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const qtdInput = parseInt(document.getElementById('mov-qtd').value);
+        
+        // Trava de segurança no Front contra números negativos ou zero
+        if (isNaN(qtdInput) || qtdInput <= 0) {
+            alert('Por favor, insira uma quantidade válida maior que zero.');
+            return;
+        }
 
-    const tipoSelecionado = document.querySelector('input[name="mov-tipo"]:checked').value;
-    const payload = {
-        codigo_item: document.getElementById('mov-codigo').value,
-        tipo: tipoSelecionado,
-        quantidade: qtdInput
-    };
+        const tipoSelecionado = document.querySelector('input[name="mov-tipo"]:checked').value;
+        const payload = {
+            codigo_item: document.getElementById('mov-codigo').value,
+            tipo: tipoSelecionado,
+            quantidade: qtdInput
+        };
 
-    const res = await fetch(`${API_URL}/api/movimentacoes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        const res = await fetch(`${API_URL}/api/movimentacoes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert('Movimentação registrada com sucesso!');
+            document.getElementById('form-mov').reset();
+            carregarEstoque();
+        } else {
+            const err = await res.json();
+            alert('Erro: ' + (err.detail || 'Não foi possível registrar.'));
+        }
     });
-
-    if (res.ok) {
-        alert('Movimentação registrada com sucesso!');
-        document.getElementById('form-mov').reset();
-        carregarEstoque();
-    } else {
-        const err = await res.json();
-        alert('Erro: ' + (err.detail || 'Não foi possível registrar.'));
-    }
-});
 
     carregarEstoque();
 </script>
