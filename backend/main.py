@@ -160,10 +160,8 @@ def gerar_etiqueta_pdf(codigo: str):
     
     nome_item = item["nome"] if "nome" in item.keys() else "Item de Estoque"
 
-    # URL padrão para o QR Code limpo
     url_ativo = f"https://estoque-statiot.onrender.com/ativo/{codigo}"
     
-    # Gerar QR Code padrão (sem logo em cima)
     qr = qrcode.QRCode(version=1, box_size=10, border=1)
     qr.add_data(url_ativo)
     qr.make(fit=True)
@@ -173,41 +171,41 @@ def gerar_etiqueta_pdf(codigo: str):
     img_qr.save(qr_buffer, format="PNG")
     qr_buffer.seek(0)
 
-    # Configuração do PDF da etiqueta (80mm de largura x 50mm de altura)
     pdf_buffer = io.BytesIO()
     largura_etiqueta = 80 * mm
     altura_etiqueta = 50 * mm
     
     c = canvas.Canvas(pdf_buffer, pagesize=(largura_etiqueta, altura_etiqueta))
     
-    # 1. Borda externa da etiqueta
+    # Borda externa
     c.setLineWidth(0.5)
     c.rect(2 * mm, 2 * mm, largura_etiqueta - 4 * mm, altura_etiqueta - 4 * mm)
     
-    # 2. Cabeçalho com a Logo da Empresa e o Nome
-    logo_path = os.path.join("img", "log-png.png")
+    # Caminho absoluto blindado para a logo
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    logo_path = os.path.join(base_dir, "img", "log-png.png")
+    
     if os.path.exists(logo_path):
         try:
-            # Insere a logo no topo esquerdo (ajuste a largura/altura conforme o formato da sua imagem)
-            c.drawImage(logo_path, 5 * mm, 38 * mm, width=15 * mm, height=8 * mm, preserveAspectRatio=True, mask='auto')
-            # Texto da empresa ao lado da logo
-            c.setFont("Helvetica-Bold", 9)
-            c.drawString(22 * mm, 41 * mm, "STATIOT — CONTROLE DE ATIVOS")
-        except Exception:
-            # Fallback caso ocorra algum erro na imagem
+            # Desenha a logo no canto superior esquerdo
+            c.drawImage(logo_path, 5 * mm, 38 * mm, width=14 * mm, height=7 * mm, preserveAspectRatio=True, mask='auto')
+            c.setFont("Helvetica-Bold", 8.5)
+            c.drawString(21 * mm, 41 * mm, "STATIOT — CONTROLE DE ATIVOS")
+        except Exception as e:
+            print(f"Erro ao renderizar logo: {e}")
             c.setFont("Helvetica-Bold", 10)
             c.drawString(5 * mm, 42 * mm, "STATIOT — CONTROLE DE ATIVOS")
     else:
         c.setFont("Helvetica-Bold", 10)
         c.drawString(5 * mm, 42 * mm, "STATIOT — CONTROLE DE ATIVOS")
         
-    # Linha divisória do cabeçalho
+    # Linha divisória
     c.line(5 * mm, 36 * mm, largura_etiqueta - 5 * mm, 36 * mm)
     
-    # 3. Inserir o QR Code limpo no lado direito
+    # QR Code no lado direito
     c.drawImage(ImageReader(qr_buffer), 47 * mm, 8 * mm, width=28 * mm, height=28 * mm)
     
-    # 4. Informações textuais do ativo no lado esquerdo
+    # Textos do ativo
     c.setFont("Helvetica-Bold", 8)
     c.drawString(6 * mm, 30 * mm, "CÓDIGO / ATIVO:")
     c.setFont("Helvetica", 10)
@@ -218,7 +216,7 @@ def gerar_etiqueta_pdf(codigo: str):
     c.setFont("Helvetica", 9)
     c.drawString(6 * mm, 14 * mm, nome_item[:22])
     
-    # 5. Rodapé indicando a propriedade/origem do ativo
+    # Rodapé
     c.setFont("Helvetica-Bold", 6)
     c.setFillColorRGB(0.2, 0.2, 0.2)
     c.drawString(6 * mm, 6 * mm, "PROPRIEDADE STATIOT — USO INTERNO")
