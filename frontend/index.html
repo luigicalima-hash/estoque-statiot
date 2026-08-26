@@ -9,6 +9,8 @@
     <!-- Font Awesome para ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <!-- Biblioteca Html5-Qrcode -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
 
@@ -78,11 +80,37 @@
         </div>
     </div>
 
-    <!-- Tabela de Estoque em Tempo Real -->
+   <!-- Tabela de Estoque e Barra de Ferramentas Elegante -->
+    <!-- Tabela de Estoque e Barra de Ferramentas Elegante -->
     <div class="table-wrapper">
-        <div class="table-header">
-            <h3><i class="fa-solid fa-chart-line"></i> Saldo Atual em Tempo Real</h3>
+        <div class="table-header search-toolbar">
+            <div class="table-header-top">
+                <h3><i class="fa-solid fa-chart-line"></i> Saldo Atual em Tempo Real</h3>
+            </div>
+            
+            <!-- Barra de Ferramentas (Busca + Escaner perfeitamente nivelados) -->
+            <div class="search-action-group">
+                <div class="search-bar-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="input-busca" placeholder="Pesquisar por código ou descrição do item..." onkeyup="filtrarEstoque()">
+                </div>
+                <button type="button" onclick="toggleLeitorModal()" class="btn-scanner-refined" title="Escanear Etiqueta">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <span>Escanear QR</span>
+                </button>
+            </div>
+
+            <!-- Modal / Coletor Flutuante Estilizado -->
+            <div id="modal-leitor" class="scanner-modal" style="display: none;">
+                <div class="scanner-modal-header">
+                    <span><i class="fa-solid fa-camera-viewfinder"></i> Leitor de Ativos</span>
+                    <button type="button" onclick="pararLeitor()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="reader" class="scanner-viewport"></div>
+                <div id="resultado-leitura" class="scanner-result"></div>
+            </div>
         </div>
+
         <div class="table-container">
             <table>
                 <thead>
@@ -92,7 +120,7 @@
                         <th>Saldo Atual</th>
                         <th>Estoque Mínimo</th>
                         <th>Status</th>
-                        <th>Ações</th> <!-- Coluna nova para o botão de etiqueta -->
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody id="tabela-corpo">
@@ -101,7 +129,6 @@
             </table>
         </div>
     </div>
-</div>
 
 <footer>
     <p>Statiot Inventory Systems &copy; 2026 — Todos os direitos reservados.</p>
@@ -218,6 +245,113 @@
     });
 
     carregarEstoque();
+let html5QrCode = null;
+let listaEstoqueGlobal = []; // Armazena os dados para a busca instantânea
+
+// Sobrescrever a função carregarEstoque para salvar os dados na global
+async function carregarEstoque() {
+    try {
+        const resposta = await fetch(`${API_URL}/api/estoque`);
+        listaEstoqueGlobal = await resposta.json();
+        renderizarTabela(listaEstoqueGlobal);
+    } catch (erro) {
+        console.error('Erro ao carregar dados:', erro);
+    }
+}
+
+function renderizarTabela(dados) {
+    const tbody = document.getElementById('tabela-corpo');
+    tbody.innerHTML = '';
+
+    if (dados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum item encontrado.</td></tr>`;
+        return;
+    }
+
+    dados.forEach(item => {
+        const classeStatus = item.Status === 'Repor' ? 'status-repor' : 'status-ok';
+        const iconeStatus = item.Status === 'Repor' ? '<i class="fa-solid fa-triangle-exclamation"></i> Repor' : '<i class="fa-solid fa-check"></i> OK';
+        
+        const linha = `
+            <tr>
+                <td><strong>${item.Codigo}</strong></td>
+                <td>${item.Item}</td>
+                <td>${item.Saldo}</td>
+                <td>${item.EstoqueMinimo}</td>
+                <td><span class="status-badge ${classeStatus}">${iconeStatus}</span></td>
+                <td>
+                    <a href="${API_URL}/api/etiqueta/${item.Codigo}" target="_blank" class="btn-etiqueta" title="Baixar Etiqueta em PDF com QR Code">
+                        <i class="fa-solid fa-qrcode"></i> Etiqueta
+                    </a>
+                </td>
+            </tr>
+        `;
+        tbody.innerHTML += linha;
+    });
+}
+
+// Filtro instantâneo de pesquisa
+function filtrarEstoque() {
+    const termo = document.getElementById('input-busca').value.toLowerCase();
+    const filtrados = listaEstoqueGlobal.filter(item => 
+        item.Codigo.toLowerCase().includes(termo) || item.Item.toLowerCase().includes(termo)
+    );
+    renderizarTabela(filtrados);
+}
+
+// Controle do Modal do Leitor
+function toggleLeitorModal() {
+    const modal = document.getElementById('modal-leitor');
+    if (modal.style.display === 'none' || modal.style.display === '') {
+        modal.style.display = 'block';
+        iniciarLeitor();
+    } else {
+        pararLeitor();
+    }
+}
+
+function iniciarLeitor() {
+    if (html5QrCode && html5QrCode.isScanning) return;
+
+    html5QrCode = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: { width: 200, height: 200 } };
+    
+    html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText) => {
+            let codigoAtivo = decodedText;
+            if (decodedText.includes('/ativo/')) {
+                const partes = decodedText.split('/ativo/');
+                codigoAtivo = partes[1];
+            }
+
+            document.getElementById('resultado-leitura').innerHTML = `
+                <span style="color: #10b981;"><i class="fa-solid fa-circle-check"></i> Lido: <strong>${codigoAtivo}</strong></span>
+            `;
+
+            // Joga o código direto na barra de pesquisa para filtrar o item na hora!
+            const inputBusca = document.getElementById('input-busca');
+            inputBusca.value = codigoAtivo;
+            filtrarEstoque();
+
+            pararLeitor();
+        },
+        (errorMessage) => {}
+    ).catch((err) => {
+        alert("Erro ao acessar a câmera. Verifique as permissões.");
+        pararLeitor();
+    });
+}
+
+function pararLeitor() {
+    if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(err => console.error(err));
+    }
+    const modal = document.getElementById('modal-leitor');
+    if (modal) modal.style.display = 'none';
+}
+
 </script>
 
 </body>

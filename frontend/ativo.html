@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Ativo - Statiot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="glow-bg glow-1"></div>
+    <div class="glow-bg glow-2"></div>
+
+    <div class="container" style="display: flex; justify-content: center; align-items: center; min-height: 85vh;">
+        <div class="glass-panel" style="width: 100%; max-width: 440px; text-align: center; padding: 36px;">
+            
+            <div style="margin-bottom: 24px;">
+                <img src="img/log-png.png" alt="Statiot Logo" style="max-height: 40px; object-fit: contain;" onerror="this.style.display='none'">
+                <h2 style="font-size: 1.4rem; font-weight: 800; margin-top: 10px; color: #fff;">Painel do Ativo</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Consulta inteligente de inventário em nuvem</p>
+            </div>
+
+            <div id="loading" style="padding: 30px; color: var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--primary);"></i>
+                <p style="margin-top: 10px; font-size: 0.9rem;">Buscando dados do ativo...</p>
+            </div>
+
+            <div id="dados-ativo" style="display: none; text-align: left; display: flex; flex-direction: column; gap: 14px;">
+                <div style="background: rgba(3, 5, 10, 0.5); border: 1px solid rgba(255, 255, 255, 0.06); padding: 14px; border-radius: var(--radius-sm);">
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Código do Ativo</span>
+                    <span id="val-codigo" style="font-size: 1.05rem; font-weight: 700; color: #fff;">-</span>
+                </div>
+
+                <div style="background: rgba(3, 5, 10, 0.5); border: 1px solid rgba(255, 255, 255, 0.06); padding: 14px; border-radius: var(--radius-sm);">
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Descrição do Item</span>
+                    <span id="val-nome" style="font-size: 1.05rem; font-weight: 700; color: #fff;">-</span>
+                </div>
+
+                <div style="background: rgba(3, 5, 10, 0.5); border: 1px solid rgba(255, 255, 255, 0.06); padding: 14px; border-radius: var(--radius-sm);">
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Saldo Atual em Estoque</span>
+                    <span id="val-saldo" style="font-size: 1.15rem; font-weight: 800; color: var(--primary);">-</span>
+                </div>
+
+                <div style="background: rgba(3, 5, 10, 0.5); border: 1px solid rgba(255, 255, 255, 0.06); padding: 14px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Status Operacional</span>
+                    </div>
+                    <div id="val-status-container">
+                        <!-- Badge inserido via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="erro-ativo" style="display: none; padding: 20px; color: var(--error);">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                <p id="msg-erro" style="font-weight: 600; font-size: 0.95rem;">Ativo não encontrado no sistema.</p>
+            </div>
+
+            <div style="margin-top: 25px; border-top: 1px solid rgba(255, 255, 255, 0.06); pt: 15px;">
+                <a href="index.html" style="color: var(--text-muted); font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: var(--transition-smooth);">
+                    <i class="fa-solid fa-arrow-left"></i> Voltar para o Painel Principal
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://estoque-statiot.onrender.com';
+
+        async function carregarAtivo() {
+            // Pega o código da URL (Ex: .../ativo.html?codigo=M8x30 ou rota amigável)
+            const urlParams = new URLSearchParams(window.location.search);
+            let codigo = urlParams.get('codigo');
+
+            // Se a URL contiver o padrão /ativo/{codigo}, extrai o final
+            if (!codigo) {
+                const pathParts = window.location.pathname.split('/');
+                const ativoIndex = pathParts.indexOf('ativo');
+                if (ativoIndex !== -1 && pathParts[ativoIndex + 1]) {
+                    codigo = pathParts[ativoIndex + 1];
+                }
+            }
+
+            if (!codigo) {
+                mostrarErro("Nenhum código de ativo foi informado na URL.");
+                return;
+            }
+
+            try {
+                // Busca o estoque completo para filtrar o item buscado
+                const resposta = await fetch(`${API_URL}/api/estoque`);
+                const dados = await resposta.json();
+                
+                const item = dados.find(i => i.Codigo.toLowerCase() === codigo.toLowerCase());
+
+                if (!item) {
+                    mostrarErro(`O ativo "${codigo}" não está cadastrado no sistema Statiot.`);
+                    return;
+                }
+
+                // Preenche os dados na tela
+                document.getElementById('val-codigo').innerText = item.Codigo;
+                document.getElementById('val-nome').innerText = item.Item;
+                document.getElementById('val-saldo').innerText = `${item.Saldo} unidades (Mín: ${item.EstoqueMinimo})`;
+
+                const statusContainer = document.getElementById('val-status-container');
+                if (item.Status === 'Repor') {
+                    statusContainer.innerHTML = `<span class="status-badge status-repor"><i class="fa-solid fa-triangle-exclamation"></i> Repor</span>`;
+                } else {
+                    statusContainer.innerHTML = `<span class="status-badge status-ok"><i class="fa-solid fa-check"></i> OK</span>`;
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dados-ativo').style.display = 'flex';
+
+            } catch (err) {
+                console.error(err);
+                mostrarErro("Erro de comunicação com o servidor em nuvem.");
+            }
+        }
+
+        function mostrarErro(msg) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('msg-erro').innerText = msg;
+            document.getElementById('erro-ativo').style.display = 'block';
+        }
+
+        carregarAtivo();
+    </script>
+</body>
+</html>

@@ -400,3 +400,112 @@ footer {
   color: #ffffff;
   box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
 }
+/* --- Barra de Ferramentas & Pesquisa Redesenhada (Elegante & Alinhada) --- */
+.search-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px;
+}
+
+.table-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 16px;
+}
+
+.table-header-top h3 {
+  margin-bottom: 0 !important;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+}
+
+.search-action-group {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  align-items: center;
+}
+
+.search-bar-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.search-bar-wrapper .search-icon {
+  position: absolute;
+  left: 16px;
+  color: #64748b;
+  font-size: 0.9rem;
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.search-bar-wrapper input {
+  width: 100%;
+  height: 46px; /* Altura fixa idêntica ao botão para alinhar perfeitamente */
+  padding: 0 16px 0 44px;
+  background: rgba(3, 5, 10, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  color: #f8fafc;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  margin-bottom: 0 !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.search-bar-wrapper input::placeholder {
+  color: #64748b;
+}
+
+.search-bar-wrapper input:focus {
+  background: rgba(3, 5, 10, 0.85);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.search-bar-wrapper input:focus + .search-icon,
+.search-bar-wrapper:focus-within .search-icon {
+  color: var(--primary);
+}
+
+/* --- Botão do Scanner Perfeitamente Alinhado --- */
+.btn-scanner-refined {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px; /* Mesma altura exata do input */
+  padding: 0 20px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+  transition: var(--transition-smooth);
+}
+
+.btn-scanner-refined:hover {
+  background: linear-gradient(135deg, var(--primary-hover), #7c3aed);
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-scanner-refined:active {
+  transform: translateY(0);
+}

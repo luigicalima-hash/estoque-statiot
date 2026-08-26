@@ -160,7 +160,7 @@ def gerar_etiqueta_pdf(codigo: str):
     
     nome_item = item["nome"] if "nome" in item.keys() else "Item de Estoque"
 
-    url_ativo = f"https://estoque-statiot.onrender.com/ativo/{codigo}"
+    url_ativo = f"https://luigicalima-hash.github.io/estoque-statiot/ativo.html?codigo={codigo}"
     
     qr = qrcode.QRCode(version=1, box_size=10, border=1)
     qr.add_data(url_ativo)
