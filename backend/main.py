@@ -181,9 +181,9 @@ def gerar_etiqueta_pdf(codigo: str):
     c.setLineWidth(0.5)
     c.rect(2 * mm, 2 * mm, largura_etiqueta - 4 * mm, altura_etiqueta - 4 * mm)
     
-    # Caminho absoluto blindado para a logo
+    # Volta um nível a partir de 'backend' para achar a pasta 'img' na raiz
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    logo_path = os.path.join(base_dir, "img", "log-png.png")
+    logo_path = os.path.join(base_dir, "..", "img", "log-png.png")
     
     if os.path.exists(logo_path):
         try:
