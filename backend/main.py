@@ -38,9 +38,16 @@ def init_db():
         CREATE TABLE IF NOT EXISTS itens (
             codigo TEXT PRIMARY KEY,
             nome TEXT NOT NULL,
-            estoque_minimo INTEGER NOT NULL
+            estoque_minimo INTEGER NOT NULL,
+            localizacao TEXT DEFAULT 'Geral'
         )
     ''')
+
+    # Migration de segurança caso a tabela já exista sem a coluna localizacao
+    try:
+        cursor.execute("ALTER TABLE itens ADD COLUMN localizacao TEXT DEFAULT 'Geral'")
+    except sqlite3.OperationalError:
+        pass # A coluna já existe
 
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS movimentacoes (
@@ -53,9 +60,9 @@ def init_db():
         )
     ''')
 
-    # Dados iniciais se estiver vazio
-    cursor.execute("INSERT OR IGNORE INTO itens (codigo, nome, estoque_minimo) VALUES ('M8x30', 'Parafuso sextavado M8x30', 200)")
-    cursor.execute("INSERT OR IGNORE INTO itens (codigo, nome, estoque_minimo) VALUES ('CH3', 'Chapa aço carbono 3mm', 10)")
+    # Dados iniciais se estiver vazio (agora com localização)
+    cursor.execute("INSERT OR IGNORE INTO itens (codigo, nome, estoque_minimo, localizacao) VALUES ('M8x30', 'Parafuso sextavado M8x30', 200, 'Prateleira A - Setor 02')")
+    cursor.execute("INSERT OR IGNORE INTO itens (codigo, nome, estoque_minimo, localizacao) VALUES ('CH3', 'Chapa aço carbono 3mm', 10, 'Almoxarifado Central - Prap. C')")
 
     cursor.execute("SELECT COUNT(*) FROM movimentacoes")
     if cursor.fetchone()[0] == 0:
@@ -73,13 +80,14 @@ class ItemCreate(BaseModel):
     codigo: str
     nome: str
     estoque_minimo: int
+    localizacao: str = Field(..., description="Localização física ou setor do ativo")
 
 class MovimentacaoCreate(BaseModel):
     codigo_item: str
     tipo: str  # 'Entrada' ou 'Saída'
     quantidade: int = Field(..., gt=0, description="A quantidade deve ser maior que zero")
 
-# 1. Rota de Listagem do Estoque (Calcula o Saldo via SQL)
+# 1. Rota de Listagem do Estoque (Calcula o Saldo via SQL e retorna a Localização)
 @app.get("/api/estoque")
 def get_estoque():
     conn = get_db_connection()
@@ -87,6 +95,7 @@ def get_estoque():
         SELECT 
             i.nome AS Item,
             i.codigo AS Codigo,
+            i.localizacao AS Localizacao,
             COALESCE(SUM(CASE WHEN m.tipo = 'Entrada' THEN m.quantidade ELSE 0 END), 0) - 
             COALESCE(SUM(CASE WHEN m.tipo = 'Saída' THEN m.quantidade ELSE 0 END), 0) AS Saldo,
             i.estoque_minimo AS EstoqueMinimo,
@@ -99,7 +108,7 @@ def get_estoque():
             END AS Status
         FROM itens i
         LEFT JOIN movimentacoes m ON i.codigo = m.codigo_item
-        GROUP BY i.codigo, i.nome, i.estoque_minimo;
+        GROUP BY i.codigo, i.nome, i.estoque_minimo, i.localizacao;
     '''
     cursor = conn.cursor()
     cursor.execute(query)
@@ -107,15 +116,15 @@ def get_estoque():
     conn.close()
     return rows
 
-# 2. Rota para Cadastrar Novo Item
+# 2. Rota para Cadastrar Novo Item (Com Localização)
 @app.post("/api/itens")
 def criar_item(item: ItemCreate):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO itens (codigo, nome, estoque_minimo) VALUES (?, ?, ?)",
-            (item.codigo, item.nome, item.estoque_minimo)
+            "INSERT INTO itens (codigo, nome, estoque_minimo, localizacao) VALUES (?, ?, ?, ?)",
+            (item.codigo, item.nome, item.estoque_minimo, item.localizacao)
         )
         conn.commit()
     except sqlite3.IntegrityError:
@@ -133,7 +142,6 @@ def criar_movimentacao(mov: MovimentacaoCreate):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Verifica se o item existe
     cursor.execute("SELECT codigo FROM itens WHERE codigo = ?", (mov.codigo_item,))
     if not cursor.fetchone():
         conn.close()
@@ -181,13 +189,11 @@ def gerar_etiqueta_pdf(codigo: str):
     c.setLineWidth(0.5)
     c.rect(2 * mm, 2 * mm, largura_etiqueta - 4 * mm, altura_etiqueta - 4 * mm)
     
-    # Volta um nível a partir de 'backend' para achar a pasta 'img' na raiz
     base_dir = os.path.dirname(os.path.abspath(__file__))
     logo_path = os.path.join(base_dir, "..", "img", "log-png.png")
     
     if os.path.exists(logo_path):
         try:
-            # Desenha a logo no canto superior esquerdo
             c.drawImage(logo_path, 5 * mm, 38 * mm, width=14 * mm, height=7 * mm, preserveAspectRatio=True, mask='auto')
             c.setFont("Helvetica-Bold", 8.5)
             c.drawString(21 * mm, 41 * mm, "STATIOT — CONTROLE DE ATIVOS")
@@ -199,7 +205,6 @@ def gerar_etiqueta_pdf(codigo: str):
         c.setFont("Helvetica-Bold", 10)
         c.drawString(5 * mm, 42 * mm, "STATIOT — CONTROLE DE ATIVOS")
         
-    # Linha divisória
     c.line(5 * mm, 36 * mm, largura_etiqueta - 5 * mm, 36 * mm)
     
     # QR Code no lado direito
