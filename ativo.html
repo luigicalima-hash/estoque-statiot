@@ -76,8 +76,8 @@
                 <p id="msg-erro" style="font-weight: 600; font-size: 0.95rem;">Ativo não encontrado no sistema.</p>
             </div>
 
-            <div style="margin-top: 25px; border-top: 1px solid rgba(255, 255, 255, 0.06); pt: 15px;">
-                <a href="index.html" style="color: var(--text-muted); font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: var(--transition-smooth);">
+            <div style="margin-top: 25px; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 15px;">
+                <a href="index.html" style="color: var(--text-muted); font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-arrow-left"></i> Voltar para o Painel Principal
                 </a>
             </div>
@@ -89,11 +89,10 @@
         const API_URL = 'https://estoque-statiot.onrender.com';
 
         async function carregarAtivo() {
-            // Pega o código da URL (Ex: .../ativo.html?codigo=M8x30 ou rota amigável)
+            // Pega o código da URL
             const urlParams = new URLSearchParams(window.location.search);
             let codigo = urlParams.get('codigo');
 
-            // Se a URL contiver o padrão /ativo/{codigo}, extrai o final
             if (!codigo) {
                 const pathParts = window.location.pathname.split('/');
                 const ativoIndex = pathParts.indexOf('ativo');
@@ -108,7 +107,6 @@
             }
 
             try {
-                // Busca o estoque completo para filtrar o item buscado
                 const resposta = await fetch(`${API_URL}/api/estoque`);
                 const dados = await resposta.json();
                 
@@ -119,10 +117,30 @@
                     return;
                 }
 
-                // Preenche os dados na tela
+                // Preenche os dados básicos na tela
                 document.getElementById('val-codigo').innerText = item.Codigo;
                 document.getElementById('val-nome').innerText = item.Item;
                 document.getElementById('val-saldo').innerText = `${item.Saldo} unidades (Mín: ${item.EstoqueMinimo})`;
+
+                // Preenche as novas informações de Localização e Responsável
+                document.getElementById('val-local').innerText = item.Localizacao || 'Geral';
+                document.getElementById('val-resp').innerText = item.Responsavel || 'Nenhum (Disponível)';
+
+                // Busca o histórico do item de forma segura dentro da função assíncrona
+                const resHist = await fetch(`${API_URL}/api/historico/${codigo}`);
+                const historico = await resHist.json();
+                const histDiv = document.getElementById('val-historico');
+                
+                if (historico.length === 0) {
+                    histDiv.innerHTML = 'Nenhuma movimentação registrada.';
+                } else {
+                    histDiv.innerHTML = historico.map(h => `
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding: 4px 0;">
+                            <span>${h.data} - <strong style="color: ${h.tipo === 'Entrada' ? '#10b981' : '#ef4444'}">${h.tipo}</strong></span>
+                            <span><strong>${h.quantidade} un</strong></span>
+                        </div>
+                    `).join('');
+                }
 
                 const statusContainer = document.getElementById('val-status-container');
                 if (item.Status === 'Repor') {
@@ -146,27 +164,8 @@
             document.getElementById('erro-ativo').style.display = 'block';
         }
 
+        // Executa a função ao carregar a página
         carregarAtivo();
-
-
-        document.getElementById('val-local').innerText = item.Localizacao || 'Não especificada';
-                document.getElementById('val-resp').innerText = item.Responsavel || 'Nenhum (Disponível)';
-
-                // Busca o histórico do item
-                const resHist = await fetch(`${API_URL}/api/historico/${codigo}`);
-                const historico = await resHist.json();
-                const histDiv = document.getElementById('val-historico');
-                
-                if (historico.length === 0) {
-                    histDiv.innerHTML = 'Nenhuma movimentação registrada.';
-                } else {
-                    histDiv.innerHTML = historico.map(h => `
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding: 4px 0;">
-                            <span>${h.data} - <strong style="color: ${h.tipo === 'Entrada' ? '#10b981' : '#ef4444'}">${h.tipo}</strong></span>
-                            <span><strong>${h.quantidade} un</strong></span>
-                        </div>
-                    `).join('');
-                }
     </script>
 </body>
 </html>
