@@ -160,15 +160,23 @@ def criar_movimentacao(mov: MovimentacaoCreate):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT codigo FROM itens WHERE codigo = ?", (mov.codigo_item,))
-    if not cursor.fetchone():
+    # Normaliza o código para maiúsculas (ou busca ignorando case com LOWER)
+    codigo_limpo = mov.codigo_item.strip()
+    
+    cursor.execute("SELECT codigo FROM itens WHERE LOWER(codigo) = LOWER(?)", (codigo_limpo,))
+    item_encontrado = cursor.fetchone()
+    
+    if not item_encontrado:
         conn.close()
         raise HTTPException(status_code=404, detail="Item não encontrado no cadastro.")
+    
+    # Usa o código real cadastrado no banco para manter a integridade da chave estrangeira
+    codigo_real = item_encontrado["codigo"]
     
     data_atual = str(date.today())
     cursor.execute(
         "INSERT INTO movimentacoes (data, codigo_item, tipo, quantidade) VALUES (?, ?, ?, ?)",
-        (data_atual, mov.codigo_item, mov.tipo, mov.quantidade)
+        (data_atual, codigo_real, mov.tipo, mov.quantidade)
     )
     conn.commit()
     conn.close()
@@ -243,4 +251,68 @@ def gerar_etiqueta_pdf(codigo: str):
         pdf_buffer, 
         media_type="application/pdf", 
         headers={"Content-Disposition": f"attachment; filename=etiqueta_{codigo}.pdf"}
+    )
+
+
+from fastapi.responses import Response
+import csv
+
+# 5. Rota para Exportar Relatório em CSV / Excel
+@app.get("/api/exportar/csv")
+def exportar_csv():
+    conn = get_db_connection()
+    query = '''
+        SELECT 
+            i.codigo AS Codigo,
+            i.nome AS Item,
+            i.localizacao AS Localizacao,
+            i.responsavel AS Responsavel,
+            COALESCE(SUM(CASE WHEN m.tipo = 'Entrada' THEN m.quantidade ELSE 0 END), 0) - 
+            COALESCE(SUM(CASE WHEN m.tipo = 'Saída' THEN m.quantidade ELSE 0 END), 0) AS SaldoAtual,
+            i.estoque_minimo AS EstoqueMinimo,
+            CASE 
+                WHEN (
+                    COALESCE(SUM(CASE WHEN m.tipo = 'Entrada' THEN m.quantidade ELSE 0 END), 0) - 
+                    COALESCE(SUM(CASE WHEN m.tipo = 'Saída' THEN m.quantidade ELSE 0 END), 0)
+                ) <= 0 THEN 'Zerado'
+                WHEN (
+                    COALESCE(SUM(CASE WHEN m.tipo = 'Entrada' THEN m.quantidade ELSE 0 END), 0) - 
+                    COALESCE(SUM(CASE WHEN m.tipo = 'Saída' THEN m.quantidade ELSE 0 END), 0)
+                ) < i.estoque_minimo THEN 'Repor'
+                ELSE 'OK'
+            END AS Status
+        FROM itens i
+        LEFT JOIN movimentacoes m ON i.codigo = m.codigo_item
+        GROUP BY i.codigo, i.nome, i.estoque_minimo, i.localizacao, i.responsavel;
+    '''
+    cursor = conn.cursor()
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    conn.close()
+
+    # Cria o arquivo CSV em memória
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';') # Usamos ponto e vírgula para abrir perfeitamente no Excel em Português
+    
+    # Cabeçalho do CSV
+    writer.writerow(["Código", "Item", "Localização", "Responsável", "Saldo Atual", "Estoque Mínimo", "Status"])
+    
+    # Linhas de dados
+    for row in rows:
+        writer.writerow([
+            row["Codigo"], 
+            row["Item"], 
+            row["Localizacao"] or "Geral", 
+            row["Responsavel"] or "Nenhum", 
+            row["SaldoAtual"], 
+            row["EstoqueMinimo"], 
+            row["Status"]
+        ])
+    
+    csv_content = output.getvalue()
+    
+    return Response(
+        content=csv_content.encode("utf-8-sig"), # utf-8-sig garante que acentos apareçam corretamente no Excel
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=relatorio_estoque_statiot.csv"}
     )

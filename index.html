@@ -1,330 +1,631 @@
-<!DOCTYPE html>
+<!doctype html>
+<!--
+  Oficina Contemporânea: layout operacional em grafite, aço e âmbar ferrugem.
+  Coloque este arquivo, style.css e sua logo (log-png.png) na mesma pasta.
+-->
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Statiot - Gestão de Estoque</title>
-    <!-- Importação da fonte moderna -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Font Awesome para ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <!-- Biblioteca Html5-Qrcode -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#191919" />
+    <meta
+      name="description"
+      content="Statiot — controle operacional de estoque."
+    />
+    <title>Statiot — Controle Operacional</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-</head>
-<body>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="brand-rail" aria-label="Identidade do Statiot">
+        <div class="rail-grid" aria-hidden="true"></div>
+        <div class="rail-content">
+          <a
+            class="brand-lockup"
+            href="#operacao"
+            aria-label="Statiot, ir para operações"
+          >
+            <span class="brand-mark"
+              ><img
+                src="log-png.png"
+                alt="Logo Statiot"
+                onerror="this.style.display='none'"
+            /></span>
+            <span class="brand-wordmark">statiot</span>
+          </a>
 
-    <!-- Elementos de fundo Glow -->
-    <div class="glow-bg glow-1"></div>
-    <div class="glow-bg glow-2"></div>
+          <div class="rail-title-block">
+            <span class="eyebrow eyebrow-light">SISTEMA DE ESTOQUE</span>
+            <p>Controle que acompanha o ritmo da sua operação.</p>
+          </div>
 
-<div class="container">
-    <!-- Cabeçalho com Logo à esquerda e Statitot centralizado -->
-    <header class="app-header">
-        <div class="logo-container">
-            <label for="logo-input" class="logo-upload-box" title="Clique para adicionar a logo da empresa">
-                <input type="file" id="logo-input" accept="image/*" style="display: none;" onchange="carregarLogo(event)">
-                <span id="logo-placeholder"><i class="fa-solid fa-image"></i> Logo</span>
-                <img id="logo-preview" src="" alt="Logo" style="display: none;">
-            </label>
+          <nav class="rail-nav" aria-label="Atalhos de operação">
+            <a href="#operacao" class="rail-link rail-link-active"
+              ><i class="fa-solid fa-table-cells-large"></i><span>Operação</span
+              ><i class="fa-solid fa-chevron-right chevron"></i
+            ></a>
+            <a href="#inventario" class="rail-link"
+              ><i class="fa-solid fa-boxes-stacked"></i><span>Inventário</span
+              ><i class="fa-solid fa-chevron-right chevron"></i
+            ></a>
+            <a href="#exportar" class="rail-link"
+              ><i class="fa-regular fa-file-excel"></i><span>Exportação</span
+              ><i class="fa-solid fa-chevron-right chevron"></i
+            ></a>
+          </nav>
+
+          <div class="rail-status">
+            <span class="status-pulse"></span>Dados sincronizados pela nuvem
+          </div>
         </div>
-        <div class="header-titles">
-            <h1>Statiot</h1>
-            <h2>Controle de Estoque</h2>
-            <p>Gestão relacional em nuvem integrada com FastAPI e SQLite</p>
-        </div>
-    </header>
-    
-    <!-- Formulários de Ação -->
-    <div class="forms-grid">
-       <!-- Cadastrar Item -->
-        <div class="glass-panel">
-            <h3><i class="fa-solid fa-box-archive"></i> Novo Item</h3>
-            <form id="form-item">
-                <label>Código:</label>
-                <input type="text" id="item-codigo" placeholder="Ex: M8x40" required>
-                
-                <label>Nome do Item:</label>
-                <input type="text" id="item-nome" placeholder="Ex: Parafuso M8x40" required>
-                
-                <label>Estoque Mínimo:</label>
-                <input type="number" id="item-minimo" placeholder="Ex: 100" required>
+        <span class="rail-index">01 — 26</span>
+      </aside>
 
-                <label>Localização / Setor:</label>
-                <input type="text" id="item-local" placeholder="Ex: Prateleira C ou Setor TI" required>
+      <main class="workspace" id="operacao">
+        <header class="mobile-brandbar">
+          <a
+            class="brand-lockup"
+            href="#operacao"
+            aria-label="Statiot, ir para operações"
+          >
+            <span class="brand-mark"
+              ><img
+                src="log-png.png"
+                alt="Logo Statiot"
+                onerror="this.style.display='none'"
+            /></span>
+            <span class="brand-wordmark">statiot</span>
+          </a>
+          <span class="mobile-status"
+            ><span class="status-pulse"></span> Online</span
+          >
+        </header>
 
-                <label>Responsável (Opcional):</label>
-                <input type="text" id="item-resp" placeholder="Ex: Carlos Silva ou Deixar em Branco">
-                
-                <button type="submit"><i class="fa-solid fa-plus"></i> Cadastrar Item</button>
+        <section class="workspace-header" aria-labelledby="page-title">
+          <div class="header-copy">
+            <div class="section-marker">
+              <span>OPERAÇÃO</span><span>ESTOQUE / 01</span>
+            </div>
+            <h1 id="page-title">
+              Registre o que entrou.<br />Saiba o que falta.
+            </h1>
+            <p>
+              Uma visão direta do estoque para decisões mais rápidas no chão de
+              operação.
+            </p>
+          </div>
+          <div
+            class="header-visual"
+            aria-label="Visual abstrato de organização de estoque"
+          >
+            <div class="shelf shelf-one"><i></i><i></i><i></i></div>
+            <div class="shelf shelf-two"><i></i><i></i><i></i><i></i></div>
+            <div class="header-visual-label">
+              <span>PAINEL ATIVO</span
+              ><strong id="header-total">— itens</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="operational-meta" aria-label="Resumo do inventário">
+          <div class="meta-item">
+            <span class="meta-label">ITENS CADASTRADOS</span
+            ><strong id="total-items">—</strong>
+          </div>
+          <div class="meta-rule"></div>
+          <div class="meta-item meta-alert">
+            <span class="meta-label">PEDIDOS DE REPOSIÇÃO</span
+            ><strong id="total-replenish">—</strong>
+          </div>
+          <div class="meta-rule"></div>
+          <button type="button" class="refresh-control" id="btn-refresh">
+            <i class="fa-solid fa-rotate"></i><span>Atualizar saldo</span>
+          </button>
+        </section>
+
+        <section class="operations-grid" aria-label="Lançamentos de estoque">
+          <article class="operation-card card-register">
+            <div class="card-heading">
+              <div class="title-icon"><i class="fa-solid fa-box-open"></i></div>
+              <div>
+                <span class="eyebrow">CADASTRO / 01</span>
+                <h2>Novo item</h2>
+              </div>
+            </div>
+
+            <form class="operation-form" id="form-item">
+              <div class="field">
+                <label for="item-codigo">Código</label
+                ><input
+                  type="text"
+                  id="item-codigo"
+                  placeholder="Ex.: M8X40"
+                  required
+                />
+              </div>
+              <div class="field">
+                <label for="item-nome">Nome do item</label
+                ><input
+                  type="text"
+                  id="item-nome"
+                  placeholder="Ex.: Parafuso sextavado"
+                  required
+                />
+              </div>
+              <div class="field">
+                <label for="item-minimo">Estoque mínimo</label
+                ><input
+                  type="number"
+                  id="item-minimo"
+                  min="0"
+                  placeholder="000"
+                  required
+                />
+              </div>
+              <div class="field">
+                <label for="item-local">Localização / setor</label
+                ><input
+                  type="text"
+                  id="item-local"
+                  placeholder="Ex.: Prateleira C"
+                  required
+                />
+              </div>
+              <div class="field field-full">
+                <label for="item-resp">Responsável <span>opcional</span></label
+                ><input
+                  type="text"
+                  id="item-resp"
+                  placeholder="Quem acompanha este item?"
+                />
+              </div>
+              <button type="submit" class="button-primary field-full">
+                <span>Cadastrar item</span
+                ><i class="fa-solid fa-chevron-right"></i>
+              </button>
             </form>
-        </div>
+          </article>
 
-        <!-- Registrar Movimentação -->
-        <div class="glass-panel">
-            <h3><i class="fa-solid fa-right-left"></i> Lançar Movimentação</h3>
-            <form id="form-mov">
-                <label>Código do Item:</label>
-                <input type="text" id="mov-codigo" placeholder="Ex: M8x30" required>
-                
-                <label>Tipo de Movimentação:</label>
-                <div class="tipo-toggle-group">
-                    <input type="radio" id="tipo-entrada" name="mov-tipo" value="Entrada" checked>
-                    <label for="tipo-entrada" class="toggle-btn entrada-btn"><i class="fa-solid fa-arrow-down"></i> Entrada</label>
+          <article class="operation-card card-movement">
+            <div class="card-heading">
+              <div class="title-icon title-icon-dark">
+                <i class="fa-solid fa-sliders"></i>
+              </div>
+              <div>
+                <span class="eyebrow">MOVIMENTAÇÃO / 02</span>
+                <h2>Lançar movimento</h2>
+              </div>
+            </div>
 
-                    <input type="radio" id="tipo-saida" name="mov-tipo" value="Saída">
-                    <label for="tipo-saida" class="toggle-btn saida-btn"><i class="fa-solid fa-arrow-up"></i> Saída</label>
+            <form class="operation-form movement-form" id="form-mov">
+              <div class="field field-full">
+                <label for="mov-codigo">Código do item</label
+                ><input
+                  type="text"
+                  id="mov-codigo"
+                  placeholder="Informe ou escaneie o código"
+                  required
+                />
+              </div>
+              <fieldset class="movement-type field-full">
+                <legend>Tipo de movimentação</legend>
+                <div class="movement-choices">
+                  <label class="movement-choice selected-entry"
+                    ><input
+                      type="radio"
+                      name="mov-tipo"
+                      value="Entrada"
+                      checked
+                    /><i class="fa-solid fa-arrow-down"></i> Entrada</label
+                  >
+                  <label class="movement-choice"
+                    ><input type="radio" name="mov-tipo" value="Saída" /><i
+                      class="fa-solid fa-arrow-up"
+                    ></i>
+                    Saída</label
+                  >
                 </div>
-                
-               <label>Quantidade:</label>
-               <input type="number" id="mov-qtd" placeholder="Ex: 50" min="1" required>
-                
-                <button type="submit"><i class="fa-solid fa-paper-plane"></i> Registrar Lançamento</button>
+              </fieldset>
+              <div class="field field-full quantity-field">
+                <label for="mov-qtd">Quantidade</label>
+                <div class="quantity-input">
+                  <input
+                    type="number"
+                    id="mov-qtd"
+                    min="1"
+                    placeholder="000"
+                    required
+                  /><span>UN.</span>
+                </div>
+              </div>
+              <button type="submit" class="button-dark field-full">
+                <span>Registrar lançamento</span
+                ><i class="fa-solid fa-chevron-right"></i>
+              </button>
             </form>
-        </div>
-    </div>
+            <div class="card-texture" aria-hidden="true"></div>
+          </article>
+        </section>
 
-    <!-- Tabela de Estoque e Barra de Ferramentas Elegante -->
-    <div class="table-wrapper">
-        <div class="table-header search-toolbar">
-            <div class="table-header-top">
-                <h3><i class="fa-solid fa-chart-line"></i> Saldo Atual em Tempo Real</h3>
+        <section
+          class="inventory-section"
+          id="inventario"
+          aria-labelledby="inventory-title"
+        >
+          <div class="inventory-title-row">
+            <div>
+              <div class="section-marker">
+                <span>INVENTÁRIO</span><span>SALDO EM TEMPO REAL</span>
+              </div>
+              <h2 id="inventory-title">Saldo atual</h2>
             </div>
-            
-            <!-- Barra de Ferramentas (Busca + Escaner perfeitamente nivelados) -->
-            <div class="search-action-group">
-                <div class="search-bar-wrapper">
-                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                    <input type="text" id="input-busca" placeholder="Pesquisar por código ou descrição do item..." onkeyup="filtrarEstoque()">
-                </div>
-                <button type="button" onclick="toggleLeitorModal()" class="btn-scanner-refined" title="Escanear Etiqueta">
-                    <i class="fa-solid fa-qrcode"></i>
-                    <span>Escanear QR</span>
-                </button>
+            <div class="inventory-actions" id="exportar">
+              <button type="button" class="scan-button" id="btn-scanner">
+                <i class="fa-solid fa-expand"></i><span>Escanear QR</span>
+              </button>
+              <a
+                href="https://estoque-statiot.onrender.com/api/exportar/csv"
+                target="_blank"
+                rel="noreferrer"
+                class="export-button"
+                ><i class="fa-solid fa-download"></i
+                ><span>Exportar CSV</span></a
+              >
             </div>
+          </div>
 
-            <!-- Modal / Coletor Flutuante Estilizado -->
-            <div id="modal-leitor" class="scanner-modal" style="display: none;">
-                <div class="scanner-modal-header">
-                    <span><i class="fa-solid fa-camera-viewfinder"></i> Leitor de Ativos</span>
-                    <button type="button" onclick="pararLeitor()"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div id="reader" class="scanner-viewport"></div>
-                <div id="resultado-leitura" class="scanner-result"></div>
-            </div>
-        </div>
+          <div class="inventory-toolbar">
+            <label class="search-field" for="input-busca"
+              ><i class="fa-solid fa-magnifying-glass"></i
+              ><input
+                type="search"
+                id="input-busca"
+                placeholder="Localize um item pelo código ou descrição"
+              /><kbd>⌘ K</kbd></label
+            >
+            <p id="search-result">Carregando registros</p>
+          </div>
 
-        <div class="table-container">
-            <table>
+          <div class="table-shell">
+            <div class="table-scroll">
+              <table>
                 <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Item</th>
-                        <th>Localização</th>
-                        <th>Saldo Atual</th>
-                        <th>Estoque Mínimo</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                    </tr>
+                  <tr>
+                    <th>Código</th>
+                    <th>Item</th>
+                    <th>Localização</th>
+                    <th class="number-cell">Saldo</th>
+                    <th class="number-cell">Mínimo</th>
+                    <th>Status</th>
+                    <th aria-label="Ações"></th>
+                  </tr>
                 </thead>
                 <tbody id="tabela-corpo">
-                    <!-- Preenchido via JavaScript -->
+                  <tr>
+                    <td colspan="7">
+                      <div class="empty-state">
+                        Carregando saldo do inventário…
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
-            </table>
-        </div>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <footer class="workspace-footer">
+          <span>STATIOT / INVENTORY SYSTEMS</span
+          ><span>© 2026 — CONTROLE OPERACIONAL</span>
+        </footer>
+      </main>
     </div>
-</div>
 
-<footer>
-    <p>Statiot Inventory Systems &copy; 2026 — Todos os direitos reservados.</p>
-</footer>
+    <div class="scanner-overlay" id="modal-leitor" aria-hidden="true">
+      <div
+        class="scanner-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="scanner-title"
+      >
+        <div class="scanner-dialog-header">
+          <div>
+            <span class="eyebrow">LEITOR / QR</span>
+            <h2 id="scanner-title">Enquadre a etiqueta</h2>
+          </div>
+          <button
+            type="button"
+            class="close-scanner"
+            id="btn-close-scanner"
+            aria-label="Fechar leitor"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div id="reader" class="qr-reader"></div>
+        <p id="resultado-leitura">
+          Posicione o QR Code dentro da área de leitura para localizar o item e
+          preencher o lançamento.
+        </p>
+      </div>
+    </div>
 
-<script>
-    const API_URL = 'https://estoque-statiot.onrender.com';
-    let html5QrCode = null;
-    let listaEstoqueGlobal = [];
+    <script>
+      const API_URL = "https://estoque-statiot.onrender.com";
+      let listaEstoqueGlobal = [];
+      let html5QrCode = null;
 
-    // Função para pré-visualizar a logo da empresa
-    function carregarLogo(event) {
-        const reader = new FileReader();
-        reader.onload = function(){
-            const output = document.getElementById('logo-preview');
-            const placeholder = document.getElementById('logo-placeholder');
-            output.src = reader.result;
-            output.style.display = 'block';
-            placeholder.style.display = 'none';
-        };
-        reader.readAsDataURL(event.target.files[0]);
-    }
+      const tabelaCorpo = document.getElementById("tabela-corpo");
+      const buscaInput = document.getElementById("input-busca");
 
-    // 1. Carregar dados do estoque e salvar na global
-    async function carregarEstoque() {
+      const formatarNumero = valor =>
+        new Intl.NumberFormat("pt-BR").format(Number(valor || 0));
+
+      function atualizarResumo() {
+        const reposicao = listaEstoqueGlobal.filter(
+          item => item.Status === "Repor"
+        ).length;
+        document.getElementById("total-items").textContent = formatarNumero(
+          listaEstoqueGlobal.length
+        );
+        document.getElementById("header-total").textContent =
+          `${formatarNumero(listaEstoqueGlobal.length)} itens`;
+        document.getElementById("total-replenish").textContent =
+          formatarNumero(reposicao);
+      }
+
+      async function carregarEstoque(mostrarMensagem = false) {
+        const botao = document.getElementById("btn-refresh");
         try {
-            const resposta = await fetch(`${API_URL}/api/estoque`);
-            listaEstoqueGlobal = await resposta.json();
-            renderizarTabela(listaEstoqueGlobal);
+          botao.classList.add("is-refreshing");
+          const resposta = await fetch(`${API_URL}/api/estoque`);
+          if (!resposta.ok) throw new Error("Falha ao consultar estoque");
+          listaEstoqueGlobal = await resposta.json();
+          atualizarResumo();
+          filtrarEstoque();
+          if (mostrarMensagem) alert("Saldo atualizado com sucesso.");
         } catch (erro) {
-            console.error('Erro ao carregar dados:', erro);
+          console.error("Erro ao carregar dados:", erro);
+          tabelaCorpo.innerHTML =
+            '<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Não foi possível consultar o estoque</strong><p>Verifique a conexão com a API e tente atualizar novamente.</p></div></div></td></tr>';
+          document.getElementById("search-result").textContent =
+            "Consulta indisponível";
+        } finally {
+          botao.classList.remove("is-refreshing");
         }
-    }
+      }
 
-    // Renderiza a tabela considerando a Localização
-    function renderizarTabela(dados) {
-        const tbody = document.getElementById('tabela-corpo');
-        tbody.innerHTML = '';
+      function renderizarTabela(dados) {
+        tabelaCorpo.innerHTML = "";
+        document.getElementById("search-result").textContent =
+          dados.length === listaEstoqueGlobal.length
+            ? "Todos os registros"
+            : `${dados.length} registros encontrados`;
 
-        if (dados.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum item encontrado.</td></tr>`;
-            return;
+        if (!dados.length) {
+          tabelaCorpo.innerHTML =
+            '<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-boxes-stacked"></i><div><strong>Nenhum item localizado</strong><p>Revise o termo de busca ou cadastre um novo item.</p></div></div></td></tr>';
+          return;
         }
 
         dados.forEach(item => {
-            const classeStatus = item.Status === 'Repor' ? 'status-repor' : 'status-ok';
-            const iconeStatus = item.Status === 'Repor' ? '<i class="fa-solid fa-triangle-exclamation"></i> Repor' : '<i class="fa-solid fa-check"></i> OK';
-            
-            const linha = `
-                <tr>
-                    <td><strong>${item.Codigo}</strong></td>
-                    <td>${item.Item}</td>
-                    <td><span style="color: var(--text-muted); font-size: 0.85rem;"><i class="fa-solid fa-location-dot"></i> ${item.Localizacao || 'Geral'}</span></td>
-                    <td>${item.Saldo}</td>
-                    <td>${item.EstoqueMinimo}</td>
-                    <td><span class="status-badge ${classeStatus}">${iconeStatus}</span></td>
-                    <td>
-                        <a href="${API_URL}/api/etiqueta/${item.Codigo}" target="_blank" class="btn-etiqueta" title="Baixar Etiqueta em PDF com QR Code">
-                            <i class="fa-solid fa-qrcode"></i> Etiqueta
-                        </a>
-                    </td>
-                </tr>
-            `;
-            tbody.innerHTML += linha;
+          const precisaRepor = item.Status === "Repor";
+          const linha = document.createElement("tr");
+          linha.innerHTML = `
+          <td class="item-code">${item.Codigo}</td>
+          <td class="item-name">${item.Item}</td>
+          <td><span class="location-cell"><i class="fa-solid fa-location-dot"></i> ${item.Localizacao || "Geral"}</span></td>
+          <td class="number-cell"><strong>${formatarNumero(item.Saldo)}</strong></td>
+          <td class="number-cell">${formatarNumero(item.EstoqueMinimo)}</td>
+          <td><span class="status-badge ${precisaRepor ? "status-replenish" : "status-ok"}"><i class="fa-solid ${precisaRepor ? "fa-triangle-exclamation" : "fa-check"}"></i>${precisaRepor ? "Repor" : "Regular"}</span></td>
+          <td class="action-cell"><a href="${API_URL}/api/etiqueta/${encodeURIComponent(item.Codigo)}" target="_blank" rel="noreferrer" class="label-link" title="Gerar etiqueta"><i class="fa-solid fa-qrcode"></i><span>Etiqueta</span></a></td>
+        `;
+          tabelaCorpo.appendChild(linha);
         });
-    }
+      }
 
-    // Filtro instantâneo de pesquisa
-    function filtrarEstoque() {
-        const termo = document.getElementById('input-busca').value.toLowerCase();
-        const filtrados = listaEstoqueGlobal.filter(item => 
-            item.Codigo.toLowerCase().includes(termo) || item.Item.toLowerCase().includes(termo)
+      function filtrarEstoque() {
+        const termo = buscaInput.value.trim().toLowerCase();
+        const filtrados = listaEstoqueGlobal.filter(
+          item =>
+            String(item.Codigo || "")
+              .toLowerCase()
+              .includes(termo) ||
+            String(item.Item || "")
+              .toLowerCase()
+              .includes(termo)
         );
         renderizarTabela(filtrados);
-    }
+      }
 
-    // 2. Evento para Cadastrar Novo Item (Com Localização e Responsável)
-    document.getElementById('form-item').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const payload = {
-            codigo: document.getElementById('item-codigo').value,
-            nome: document.getElementById('item-nome').value,
-            estoque_minimo: parseInt(document.getElementById('item-minimo').value),
-            localizacao: document.getElementById('item-local').value,
-            responsavel: document.getElementById('item-resp').value || null
-        };
-
-        const res = await fetch(`${API_URL}/api/itens`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+      document
+        .getElementById("form-item")
+        .addEventListener("submit", async evento => {
+          evento.preventDefault();
+          const botao = evento.currentTarget.querySelector(
+            'button[type="submit"]'
+          );
+          try {
+            botao.disabled = true;
+            botao.querySelector("span").textContent = "Cadastrando";
+            const resposta = await fetch(`${API_URL}/api/itens`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                codigo: document.getElementById("item-codigo").value,
+                nome: document.getElementById("item-nome").value,
+                estoque_minimo: parseInt(
+                  document.getElementById("item-minimo").value,
+                  10
+                ),
+                localizacao: document.getElementById("item-local").value,
+                responsavel: document.getElementById("item-resp").value || null,
+              }),
+            });
+            if (!resposta.ok) {
+              const erro = await resposta.json();
+              throw new Error(erro.detail || "Não foi possível cadastrar.");
+            }
+            alert("Item cadastrado com sucesso!");
+            evento.currentTarget.reset();
+            carregarEstoque();
+          } catch (erro) {
+            alert(`Erro: ${erro.message || "Não foi possível cadastrar."}`);
+          } finally {
+            botao.disabled = false;
+            botao.querySelector("span").textContent = "Cadastrar item";
+          }
         });
 
-        if (res.ok) {
-            alert('Item cadastrado com sucesso!');
-            document.getElementById('form-item').reset();
-            carregarEstoque();
-        } else {
-            const err = await res.json();
-            alert('Erro: ' + (err.detail || 'Não foi possível cadastrar.'));
-        }
-    });
-
-    // 3. Evento para Registrar Movimentação
-    document.getElementById('form-mov').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const qtdInput = parseInt(document.getElementById('mov-qtd').value);
-        if (isNaN(qtdInput) || qtdInput <= 0) {
-            alert('Por favor, insira uma quantidade válida maior que zero.');
+      document
+        .getElementById("form-mov")
+        .addEventListener("submit", async evento => {
+          evento.preventDefault();
+          const quantidade = parseInt(
+            document.getElementById("mov-qtd").value,
+            10
+          );
+          const botao = evento.currentTarget.querySelector(
+            'button[type="submit"]'
+          );
+          if (!quantidade || quantidade <= 0) {
+            alert("Insira uma quantidade válida, maior que zero.");
             return;
-        }
-
-        const tipoSelecionado = document.querySelector('input[name="mov-tipo"]:checked').value;
-        const payload = {
-            codigo_item: document.getElementById('mov-codigo').value,
-            tipo: tipoSelecionado,
-            quantidade: qtdInput
-        };
-
-        const res = await fetch(`${API_URL}/api/movimentacoes`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-            alert('Movimentação registrada com sucesso!');
-            document.getElementById('form-mov').reset();
+          }
+          try {
+            botao.disabled = true;
+            botao.querySelector("span").textContent = "Registrando";
+            const resposta = await fetch(`${API_URL}/api/movimentacoes`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                codigo_item: document.getElementById("mov-codigo").value,
+                tipo: document.querySelector('input[name="mov-tipo"]:checked')
+                  .value,
+                quantidade,
+              }),
+            });
+            if (!resposta.ok) {
+              const erro = await resposta.json();
+              throw new Error(
+                erro.detail || "Não foi possível registrar o lançamento."
+              );
+            }
+            alert("Movimentação registrada com sucesso!");
+            evento.currentTarget.reset();
+            document.querySelector(
+              'input[name="mov-tipo"][value="Entrada"]'
+            ).checked = true;
+            atualizarTipoMovimentacao();
             carregarEstoque();
-        } else {
-            const err = await res.json();
-            alert('Erro: ' + (err.detail || 'Não foi possível registrar.'));
-        }
-    });
-
-    // Controle do Modal do Leitor de QR Code
-    function toggleLeitorModal() {
-        const modal = document.getElementById('modal-leitor');
-        if (modal.style.display === 'none' || modal.style.display === '') {
-            modal.style.display = 'block';
-            iniciarLeitor();
-        } else {
-            pararLeitor();
-        }
-    }
-
-    function iniciarLeitor() {
-        if (html5QrCode && html5QrCode.isScanning) return;
-
-        html5QrCode = new Html5Qrcode("reader");
-        const config = { fps: 10, qrbox: { width: 200, height: 200 } };
-        
-        html5QrCode.start(
-            { facingMode: "environment" },
-            config,
-            (decodedText) => {
-                let codigoAtivo = decodedText;
-                if (decodedText.includes('/ativo/')) {
-                    const partes = decodedText.split('/ativo/');
-                    codigoAtivo = partes[1];
-                }
-
-                document.getElementById('resultado-leitura').innerHTML = `
-                    <span style="color: #10b981;"><i class="fa-solid fa-circle-check"></i> Lido: <strong>${codigoAtivo}</strong></span>
-                `;
-
-                const inputBusca = document.getElementById('input-busca');
-                inputBusca.value = codigoAtivo;
-                filtrarEstoque();
-
-                pararLeitor();
-            },
-            (errorMessage) => {}
-        ).catch((err) => {
-            alert("Erro ao acessar a câmera. Verifique as permissões.");
-            pararLeitor();
+          } catch (erro) {
+            alert(
+              `Erro: ${erro.message || "Não foi possível registrar a movimentação."}`
+            );
+          } finally {
+            botao.disabled = false;
+            botao.querySelector("span").textContent = "Registrar lançamento";
+          }
         });
-    }
 
-    function pararLeitor() {
-        if (html5QrCode && html5QrCode.isScanning) {
-            html5QrCode.stop().catch(err => console.error(err));
+      function atualizarTipoMovimentacao() {
+        document
+          .querySelectorAll(".movement-choice")
+          .forEach(elemento =>
+            elemento.classList.remove("selected-entry", "selected-exit")
+          );
+        const selecionado = document.querySelector(
+          'input[name="mov-tipo"]:checked'
+        );
+        selecionado
+          .closest(".movement-choice")
+          .classList.add(
+            selecionado.value === "Entrada" ? "selected-entry" : "selected-exit"
+          );
+      }
+
+      document
+        .querySelectorAll('input[name="mov-tipo"]')
+        .forEach(input =>
+          input.addEventListener("change", atualizarTipoMovimentacao)
+        );
+      buscaInput.addEventListener("input", filtrarEstoque);
+      document
+        .getElementById("btn-refresh")
+        .addEventListener("click", () => carregarEstoque(true));
+
+      function abrirLeitor() {
+        const modal = document.getElementById("modal-leitor");
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+        if (!window.Html5Qrcode) {
+          alert(
+            "O leitor de QR Code não foi carregado. Verifique sua conexão e tente novamente."
+          );
+          fecharLeitor();
+          return;
         }
-        const modal = document.getElementById('modal-leitor');
-        if (modal) modal.style.display = 'none';
-    }
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode
+          .start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 220, height: 220 } },
+            textoLido => {
+              const codigo = textoLido.includes("/ativo/")
+                ? textoLido.split("/ativo/")[1]
+                : textoLido;
+              buscaInput.value = codigo;
+              document.getElementById("mov-codigo").value = codigo;
+              document.getElementById("resultado-leitura").innerHTML =
+                `<strong><i class="fa-solid fa-circle-check"></i> Código ${codigo} localizado.</strong>`;
+              filtrarEstoque();
+              fecharLeitor();
+            },
+            () => {}
+          )
+          .catch(() => {
+            alert(
+              "Não foi possível acessar a câmera. Verifique as permissões."
+            );
+            fecharLeitor();
+          });
+      }
 
-    // Inicialização ao carregar a página
-    carregarEstoque();
-</script>
+      function fecharLeitor() {
+        if (html5QrCode && html5QrCode.isScanning)
+          html5QrCode.stop().catch(console.error);
+        html5QrCode = null;
+        const modal = document.getElementById("modal-leitor");
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+      }
 
-</body>
+      document
+        .getElementById("btn-scanner")
+        .addEventListener("click", abrirLeitor);
+      document
+        .getElementById("btn-close-scanner")
+        .addEventListener("click", fecharLeitor);
+      document
+        .getElementById("modal-leitor")
+        .addEventListener("click", evento => {
+          if (evento.target.id === "modal-leitor") fecharLeitor();
+        });
+      document.addEventListener("keydown", evento => {
+        if (evento.key === "Escape") fecharLeitor();
+      });
+      carregarEstoque();
+    </script>
+  </body>
 </html>
