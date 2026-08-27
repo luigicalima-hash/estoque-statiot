@@ -44,6 +44,19 @@
                 </div>
 
                 <div style="background: rgba(3, 5, 10, 0.5); border: 1px solid rgba(255, 255, 255, 0.06); padding: 14px; border-radius: var(--radius-sm);">
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Responsável / Cautela</span>
+                    <span id="val-resp" style="font-size: 1.05rem; font-weight: 700; color: #fff;">-</span>
+                </div>
+
+                <!-- Histórico do Ativo -->
+                <div style="background: rgba(3, 5, 10, 0.5); border: 1px solid rgba(255, 255, 255, 0.06); padding: 14px; border-radius: var(--radius-sm);">
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 8px;">Histórico de Movimentações</span>
+                    <div id="val-historico" style="max-height: 120px; overflow-y: auto; font-size: 0.85rem; color: var(--text-muted);">
+                        Carregando histórico...
+                    </div>
+                </div>
+
+                <div style="background: rgba(3, 5, 10, 0.5); border: 1px solid rgba(255, 255, 255, 0.06); padding: 14px; border-radius: var(--radius-sm);">
                     <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Saldo Atual em Estoque</span>
                     <span id="val-saldo" style="font-size: 1.15rem; font-weight: 800; color: var(--primary);">-</span>
                 </div>
@@ -134,6 +147,26 @@
         }
 
         carregarAtivo();
+
+
+        document.getElementById('val-local').innerText = item.Localizacao || 'Não especificada';
+                document.getElementById('val-resp').innerText = item.Responsavel || 'Nenhum (Disponível)';
+
+                // Busca o histórico do item
+                const resHist = await fetch(`${API_URL}/api/historico/${codigo}`);
+                const historico = await resHist.json();
+                const histDiv = document.getElementById('val-historico');
+                
+                if (historico.length === 0) {
+                    histDiv.innerHTML = 'Nenhuma movimentação registrada.';
+                } else {
+                    histDiv.innerHTML = historico.map(h => `
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding: 4px 0;">
+                            <span>${h.data} - <strong style="color: ${h.tipo === 'Entrada' ? '#10b981' : '#ef4444'}">${h.tipo}</strong></span>
+                            <span><strong>${h.quantidade} un</strong></span>
+                        </div>
+                    `).join('');
+                }
     </script>
 </body>
 </html>
