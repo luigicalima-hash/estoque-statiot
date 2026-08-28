@@ -316,3 +316,48 @@ def exportar_csv():
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=relatorio_estoque_statiot.csv"}
     )
+
+
+
+    from pydantic import BaseModel, Field
+
+class ItemUpdate(BaseModel):
+    nome: str
+    estoque_minimo: int
+    localizacao: str
+    responsavel: str | None = None
+
+# Rota para Editar Item
+@app.put("/api/itens/{codigo}")
+def atualizar_item(codigo: str, item: ItemUpdate):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT codigo FROM itens WHERE LOWER(codigo) = LOWER(?)", (codigo,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Item não encontrado.")
+    
+    cursor.execute(
+        "UPDATE itens SET nome = ?, estoque_minimo = ?, localizacao = ?, responsavel = ? WHERE LOWER(codigo) = LOWER(?)",
+        (item.nome, item.estoque_minimo, item.localizacao, item.responsavel, codigo)
+    )
+    conn.commit()
+    conn.close()
+    return {"mensagem": "Item atualizado com sucesso!"}
+
+# Rota para Excluir Item
+@app.delete("/api/itens/{codigo}")
+def excluir_item(codigo: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT codigo FROM itens WHERE LOWER(codigo) = LOWER(?)", (codigo,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Item não encontrado.")
+    
+    # Remove as movimentações vinculadas primeiro para respeitar a chave estrangeira
+    cursor.execute("DELETE FROM movimentacoes WHERE LOWER(codigo_item) = LOWER(?)", (codigo,))
+    cursor.execute("DELETE FROM itens WHERE LOWER(codigo) = LOWER(?)", (codigo,))
+    conn.commit()
+    conn.close()
+    return {"mensagem": "Item excluído com sucesso!"}

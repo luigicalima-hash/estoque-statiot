@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statiot — Autenticação de Operação</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body {
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        background: var(--ink);
+        color: #f5f5f0;
+      }
+      .login-shell {
+        width: min(100% - 32px, 440px);
+        padding: 40px;
+        background: var(--paper);
+        color: var(--ink);
+        box-shadow: 0 30px 80px rgb(0 0 0 / 40%);
+        border-top: 4px solid var(--signal);
+      }
+      .login-header {
+        margin-bottom: 28px;
+      }
+      .login-header h1 {
+        margin: 10px 0 6px;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.85rem;
+        letter-spacing: -0.06em;
+      }
+      .login-header p {
+        margin: 0;
+        color: #696a64;
+        font-size: 0.85rem;
+      }
+      .demo-shortcuts {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+      }
+      .demo-btn {
+        padding: 8px 4px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 0.62rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-align: center;
+        transition: background 150ms var(--ease-out);
+      }
+      .demo-btn:hover {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-shell">
+      <div class="login-header">
+        <div class="section-marker"><span>STATIOT</span><span>AUTENTICAÇÃO</span></div>
+        <h1>Painel de Acesso</h1>
+        <p>Selecione um perfil ou insira credenciais para iniciar.</p>
+      </div>
+
+      <form id="loginForm" class="operation-form" style="grid-template-columns: 1fr;">
+        <div class="field field-full">
+          <label for="userEmail">E-mail de acesso</label>
+          <input type="email" id="userEmail" required placeholder="admin@statiot.com" />
+        </div>
+        <div class="field field-full">
+          <label for="userPass">Senha</label>
+          <input type="password" id="userPass" required placeholder="••••••••" />
+        </div>
+        <button type="submit" class="button-primary field-full" style="justify-content: center; margin-top: 10px;">
+          <span>Acessar sistema</span><i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <div class="demo-shortcuts">
+        <button type="button" class="demo-btn" onclick="preencher('admin@statiot.com', 'admin123')">Admin (Total)</button>
+        <button type="button" class="demo-btn" onclick="preencher('operador@statiot.com', 'op123')">Operador</button>
+        <button type="button" class="demo-btn" onclick="preencher('viewer@statiot.com', 'view123')">Visualizador</button>
+      </div>
+    </div>
+
+    <script>
+      function preencher(email, senha) {
+        document.getElementById('userEmail').value = email;
+        document.getElementById('userPass').value = senha;
+      }
+
+      document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('userEmail').value.trim().toLowerCase();
+
+        let role = 'viewer';
+        let nome = 'Visualizador';
+
+        if (email.includes('admin')) {
+          role = 'admin';
+          nome = 'Administrador';
+        } else if (email.includes('operador') || email.includes('op')) {
+          role = 'operator';
+          nome = 'Operador de Estoque';
+        }
+
+        // Salva a sessão no navegador para a página principal ler
+        localStorage.setItem('statiot_user_role', role);
+        localStorage.setItem('statiot_user_name', nome);
+
+        // Redireciona para o estoque
+        window.location.href = 'index.html';
+      });
+    </script>
+  </body>
+</html>
