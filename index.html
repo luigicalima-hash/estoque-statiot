@@ -602,6 +602,14 @@
           });
       }
 
+      // Exemplo de proteção nos formulários:
+      const perfilAtual = localStorage.getItem('statiot_user_role') || 'viewer';
+
+      if (perfilAtual === 'viewer') {
+          alert('Acesso negado: Seu perfil (Visualizador) possui permissão apenas de leitura.');
+          return; // Interrompe a execução antes de tentar enviar ou resetar
+      }
+
       function fecharLeitor() {
         if (html5QrCode && html5QrCode.isScanning)
           html5QrCode.stop().catch(console.error);
