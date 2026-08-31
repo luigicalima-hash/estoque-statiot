@@ -84,7 +84,25 @@ def init_db():
 # Inicializa o banco de itens e movimentações
 init_db()
 
-# --- GESTÃO DE USUÁRIOS E AUTENTICAÇÃO ---
+# --- MODELOS PYDANTIC (DEVEM FICAR ANTES DAS ROTAS) ---
+class ItemCreate(BaseModel):
+    codigo: str
+    nome: str
+    estoque_minimo: int
+    localizacao: str = "Geral"
+    responsavel: str | None = None
+
+class MovimentacaoCreate(BaseModel):
+    codigo_item: str
+    tipo: str
+    quantidade: int = Field(..., gt=0)
+
+class ItemUpdate(BaseModel):
+    nome: str
+    estoque_minimo: int
+    localizacao: str
+    responsavel: str | None = None
+
 class UsuarioCreate(BaseModel):
     nome: str
     email: str 
@@ -95,6 +113,8 @@ class LoginPayload(BaseModel):
     email: str
     senha: str
 
+
+# --- GESTÃO DE USUÁRIOS E CRIAÇÃO DA TABELA ---
 def criar_tabela_usuarios():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -119,9 +139,10 @@ def criar_tabela_usuarios():
         conn.commit()
     conn.close()
 
-# Inicializa explicitamente a tabela de usuários
 criar_tabela_usuarios()
 
+
+# --- ROTAS DA API ---
 
 @app.get("/api/estoque")
 def get_estoque():
@@ -333,12 +354,6 @@ def exportar_csv():
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=relatorio_estoque_statiot.csv"}
     )
-
-class ItemUpdate(BaseModel):
-    nome: str
-    estoque_minimo: int
-    localizacao: str
-    responsavel: str | None = None
 
 @app.put("/api/itens/{codigo}")
 def atualizar_item(codigo: str, item: ItemUpdate):
