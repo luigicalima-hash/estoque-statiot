@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#191919" />
+    <title>Statiot — Gestão de Usuários</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="brand-rail" aria-label="Identidade do Statiot">
+        <div class="rail-grid" aria-hidden="true"></div>
+        <div class="rail-content">
+          <a class="brand-lockup" href="index.html" aria-label="Statiot, ir para operações">
+            <span class="brand-mark"><img src="log-png.png" alt="Logo Statiot" onerror="this.style.display='none'"/></span>
+            <span class="brand-wordmark">Statiot</span>
+          </a>
+
+          <div class="rail-title-block">
+            <span class="eyebrow eyebrow-light">GOVERNANÇA</span>
+            <p>Controle de acessos e hierarquia da operação.</p>
+          </div>
+
+          <nav class="rail-nav" aria-label="Atalhos de operação">
+            <a href="#operacao" class="rail-link rail-link-active"
+              ><i class="fa-solid fa-table-cells-large"></i><span>Operação</span
+              ><i class="fa-solid fa-chevron-right chevron"></i
+            ></a>
+            <a href="#inventario" class="rail-link"
+              ><i class="fa-solid fa-boxes-stacked"></i><span>Inventário</span
+              ><i class="fa-solid fa-chevron-right chevron"></i
+            ></a>
+          <a href="usuarios.html" class="rail-link" id="link-menu-usuarios">
+              <i class="fa-solid fa-users-gear"></i><span>Usuários</span>
+              <i class="fa-solid fa-chevron-right chevron"></i>
+            </a>
+            <a href="#exportar" class="rail-link"
+              ><i class="fa-regular fa-file-excel"></i><span>Exportação</span
+              ><i class="fa-solid fa-chevron-right chevron"></i
+            ></a>
+          </nav>
+
+          <div class="rail-status" id="rail-status-user">
+            <span class="status-pulse"></span>Carregando sessão...
+          </div>
+        </div>
+        <span class="rail-index">02 — 26</span>
+      </aside>
+
+      <main class="workspace">
+        <section class="workspace-header" aria-labelledby="page-title">
+          <div class="header-copy">
+            <div class="section-marker">
+              <span>ADMINISTRAÇÃO</span><span>SEGURANÇA / 02</span>
+            </div>
+            <h1 id="page-title">Controle de Equipe</h1>
+            <p>Cadastre novos colaboradores e defina os níveis de permissão no sistema.</p>
+          </div>
+        </section>
+
+        <!-- Formulário de Cadastro de Novo Usuário -->
+        <section class="inventory-section" style="margin-top: 0;">
+          <div class="inventory-title-row">
+            <div>
+              <div class="section-marker">
+                <span>CADASTRO</span><span>NOVO COLABORADOR</span>
+              </div>
+              <h2>Adicionar usuário</h2>
+            </div>
+          </div>
+
+          <form class="operation-form" id="form-novo-usuario" style="grid-template-columns: repeat(4, 1fr); gap: 16px; background: var(--paper); padding: 25px; border-top: 3px solid var(--signal);">
+            <div class="field">
+              <label for="novo-nome">Nome</label>
+              <input type="text" id="novo-nome" placeholder="Nome completo" required />
+            </div>
+            <div class="field">
+              <label for="novo-email">E-mail</label>
+              <input type="email" id="novo-email" placeholder="usuario@statiot.com" required />
+            </div>
+            <div class="field">
+              <label for="novo-senha">Senha</label>
+              <input type="password" id="novo-senha" placeholder="••••••••" required />
+            </div>
+            <div class="field">
+              <label for="novo-role">Perfil de Acesso</label>
+              <select id="novo-role" style="width: 100%; height: 46px; padding: 0 12px; border: 1px solid var(--line); background: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem;">
+                <option value="admin">Administrador (Total)</option>
+                <option value="operador">Operador (Cadastro/Movimento)</option>
+                <option value="viewer">Visualizador (Somente Leitura)</option>
+              </select>
+            </div>
+            <button type="submit" class="button-primary field-full" style="grid-column: span 4; justify-content: center; margin-top: 10px;">
+              <span>Cadastrar colaborador</span><i class="fa-solid fa-user-plus"></i>
+            </button>
+          </form>
+        </section>
+
+        <!-- Tabela de Usuários Cadastrados -->
+        <section class="inventory-section" style="margin-top: 40px;">
+          <div class="inventory-title-row">
+            <div>
+              <div class="section-marker">
+                <span>DIRETÓRIO</span><span>EQUIPE ATIVA</span>
+              </div>
+              <h2>Usuários cadastrados</h2>
+            </div>
+          </div>
+
+          <div class="table-shell">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Nível de Acesso</th>
+                    <th aria-label="Ações"></th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-usuarios-corpo">
+                  <tr>
+                    <td colspan="4"><div class="empty-state">Carregando diretório de usuários...</div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <footer class="workspace-footer">
+          <span>STATIOT / GOVERNANCE SYSTEMS</span><span>© 2026 — CONTROLE DE ACESSOS</span>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      const API_URL = "https://estoque-statiot.onrender.com";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const roleAtual = (localStorage.getItem('statiot_user_role') || 'viewer').trim().toLowerCase();
+        const nomeUsuario = localStorage.getItem('statiot_user_name') || 'Visitante';
+        // Mostra o link de usuários apenas se for admin
+        const linkUsuarios = document.getElementById('link-menu-usuarios');
+        if (linkUsuarios) {
+            if (roleAtual !== 'admin') {
+                linkUsuarios.style.display = 'none';
+            }
+        }
+        // Restrição de segurança: Apenas Admin acessa esta página
+        if (roleAtual !== 'admin') {
+          alert('Acesso restrito: Apenas administradores podem gerenciar usuários.');
+          window.location.href = 'index.html';
+          return;
+        }
+
+        const railStatus = document.getElementById('rail-status-user');
+        if (railStatus) {
+            railStatus.innerHTML = `<span class="status-pulse"></span> ${nomeUsuario} (ADMIN) | <a href="login.html" style="color: var(--signal); text-decoration: none; margin-left: 6px;">Sair</a>`;
+        }
+
+        carregarUsuarios();
+      });
+
+      async function carregarUsuarios() {
+        const tbody = document.getElementById("tabela-usuarios-corpo");
+        try {
+          const resp = await fetch(`${API_URL}/api/usuarios`);
+          if (!resp.ok) throw new Error("Erro ao buscar usuários");
+          const usuarios = await resp.json();
+          
+          tbody.innerHTML = "";
+          if (usuarios.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">Nenhum usuário cadastrado.</div></td></tr>';
+            return;
+          }
+
+          usuarios.forEach(u => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td><strong>${u.nome}</strong></td>
+              <td>${u.email}</td>
+              <td><span class="status-badge status-ok">${u.role.toUpperCase()}</span></td>
+              <td class="action-cell">
+                <button type="button" onclick="excluirUsuario(${u.id})" style="background: #b54232; color: #fff; border: none; padding: 6px 12px; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-trash"></i> <span>Remover</span>
+                </button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (e) {
+          tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">Erro ao carregar lista de usuários.</div></td></tr>`;
+        }
+      }
+
+      async function excluirUsuario(id) {
+        if (!confirm("Tem certeza que deseja remover o acesso deste usuário?")) return;
+        try {
+          const resp = await fetch(`${API_URL}/api/usuarios/${id}`, { method: 'DELETE' });
+          if (!resp.ok) throw new Error("Não foi possível excluir o usuário.");
+          alert("Usuário removido com sucesso!");
+          carregarUsuarios();
+        } catch (e) {
+          alert(`Erro: ${e.message}`);
+        }
+      }
+
+      document.getElementById("form-novo-usuario").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const nome = document.getElementById("novo-nome").value.trim();
+        const email = document.getElementById("novo-email").value.trim();
+        const senha = document.getElementById("novo-senha").value.trim();
+        const role = document.getElementById("novo-role").value;
+
+        try {
+          const resp = await fetch(`${API_URL}/api/usuarios`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, email, senha, role })
+          });
+
+          if (!resp.ok) {
+            const err = await resp.json();
+            throw new Error(err.detail || "Erro ao cadastrar usuário.");
+          }
+
+          alert("Usuário cadastrado com sucesso!");
+          e.target.reset();
+          carregarUsuarios();
+        } catch (err) {
+          alert(`Erro: ${err.message}`);
+        }
+      });
+    </script>
+  </body>
+</html>

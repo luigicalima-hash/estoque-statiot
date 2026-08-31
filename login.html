@@ -100,28 +100,34 @@
         document.getElementById('userPass').value = senha;
       }
 
-      document.getElementById('loginForm').addEventListener('submit', (e) => {
+      document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('userEmail').value.trim().toLowerCase();
+        const email = document.getElementById('userEmail').value.trim();
+        const senha = document.getElementById('userPass').value.trim();
 
-        let role = 'viewer';
-        let nome = 'Visualizador';
+        try {
+          const resposta = await fetch(`${API_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, senha })
+          });
 
-        if (email.includes('admin')) {
-          role = 'admin';
-          nome = 'Administrador';
-        } else if (email.includes('operador') || email.includes('op')) {
-          role = 'operator';
-          nome = 'Operador de Estoque';
+          if (!resposta.ok) {
+            throw new Error('E-mail ou senha inválidos.');
+          }
+
+          const dados = await resposta.json();
+          
+          // Salva os dados reais retornados pelo banco
+          localStorage.setItem('statiot_user_role', dados.role);
+          localStorage.setItem('statiot_user_name', dados.nome);
+          
+          window.location.href = 'index.html';
+        } catch (erro) {
+          alert(`Erro de acesso: ${erro.message}`);
         }
-
-        // Salva a sessão no navegador para a página principal ler
-        localStorage.setItem('statiot_user_role', role);
-        localStorage.setItem('statiot_user_name', nome);
-
-        // Redireciona para o estoque
-        window.location.href = 'index.html';
       });
+      
     </script>
   </body>
 </html>

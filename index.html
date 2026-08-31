@@ -25,6 +25,39 @@
     />
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      /* Estilos refinados para os painéis de gráficos dentro da estética */
+      .analytics-section {
+        margin-top: 45px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .analytics-card {
+        background: var(--paper);
+        border-top: 3px solid var(--signal);
+        padding: 25px;
+        box-shadow: var(--shadow-short);
+      }
+      .analytics-card h3 {
+        margin: 5px 0 20px;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.1rem;
+        letter-spacing: -0.04em;
+        color: var(--ink);
+      }
+      .chart-container {
+        position: relative;
+        height: 220px;
+        width: 100%;
+      }
+      @media (max-width: 830px) {
+        .analytics-section {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
   </head>
   <body>
     <div class="app-shell">
@@ -59,6 +92,10 @@
               ><i class="fa-solid fa-boxes-stacked"></i><span>Inventário</span
               ><i class="fa-solid fa-chevron-right chevron"></i
             ></a>
+             <a href="usuarios.html" class="rail-link" id="link-menu-usuarios">
+              <i class="fa-solid fa-users-gear"></i><span>Usuários</span>
+              <i class="fa-solid fa-chevron-right chevron"></i>
+            </a>
             <a href="#exportar" class="rail-link"
               ><i class="fa-regular fa-file-excel"></i><span>Exportação</span
               ><i class="fa-solid fa-chevron-right chevron"></i
@@ -134,8 +171,26 @@
           </button>
         </section>
 
+        <!-- SEÇÃO EXCLUSIVA DE GRÁFICOS ANALÍTICOS (Visível apenas para Admin por segurança) -->
+        <section class="analytics-section" id="secao-analytics" data-role="admin">
+          <div class="analytics-card">
+            <span class="eyebrow">ANÁLISE / 01</span>
+            <h3>Status do Inventário</h3>
+            <div class="chart-container">
+              <canvas id="statusChart"></canvas>
+            </div>
+          </div>
+          <div class="analytics-card" style="border-top-color: var(--ink);">
+            <span class="eyebrow">ANÁLISE / 02</span>
+            <h3>Fluxo de Movimentações</h3>
+            <div class="chart-container">
+              <canvas id="flowChart"></canvas>
+            </div>
+          </div>
+        </section>
+
         <section class="operations-grid" aria-label="Lançamentos de estoque">
-          <article class="operation-card card-register">
+          <article class="operation-card card-register" data-role="admin, operador">              
             <div class="card-heading">
               <div class="title-icon"><i class="fa-solid fa-box-open"></i></div>
               <div>
@@ -197,7 +252,7 @@
             </form>
           </article>
 
-          <article class="operation-card card-movement">
+          <article class="operation-card card-movement" data-role="admin, operador">
             <div class="card-heading">
               <div class="title-icon title-icon-dark">
                 <i class="fa-solid fa-sliders"></i>
@@ -365,6 +420,8 @@
       const API_URL = "https://estoque-statiot.onrender.com";
       let listaEstoqueGlobal = [];
       let html5QrCode = null;
+      let statusChartInstance = null;
+      let flowChartInstance = null;
 
       const tabelaCorpo = document.getElementById("tabela-corpo");
       const buscaInput = document.getElementById("input-busca");
@@ -376,6 +433,8 @@
         const reposicao = listaEstoqueGlobal.filter(
           item => item.Status === "Repor"
         ).length;
+        const regulares = listaEstoqueGlobal.length - reposicao;
+
         document.getElementById("total-items").textContent = formatarNumero(
           listaEstoqueGlobal.length
         );
@@ -383,6 +442,63 @@
           `${formatarNumero(listaEstoqueGlobal.length)} itens`;
         document.getElementById("total-replenish").textContent =
           formatarNumero(reposicao);
+
+        // Atualiza os gráficos se o usuário for Admin
+        const roleAtual = localStorage.getItem('statiot_user_role') || 'viewer';
+        if (roleAtual === 'admin') {
+          renderizarGraficos(regulares, reposicao);
+        }
+      }
+
+      function renderizarGraficos(regulares, reposicao) {
+        // Gráfico de Status (Rosca)
+        const ctxStatus = document.getElementById('statusChart').getContext('2d');
+        if (statusChartInstance) statusChartInstance.destroy();
+
+        statusChartInstance = new Chart(ctxStatus, {
+          type: 'doughnut',
+          data: {
+            labels: ['Regular', 'Repor'],
+            datasets: [{
+              data: [regulares, reposicao],
+              backgroundColor: ['#36735d', '#b54232'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Space Grotesk', size: 11 } } }
+            }
+          }
+        });
+
+        // Gráfico de Fluxo (Linha simulada / analítica)
+        const ctxFlow = document.getElementById('flowChart').getContext('2d');
+        if (flowChartInstance) flowChartInstance.destroy();
+
+        flowChartInstance = new Chart(ctxFlow, {
+          type: 'bar',
+          data: {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+            datasets: [{
+              label: 'Movimentações',
+              data: [12, 19, 8, 15, 22, 5, 10],
+              backgroundColor: '#bd5e3c',
+              borderRadius: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { grid: { color: '#e2e2dc' }, ticks: { font: { family: 'Space Grotesk', size: 10 } } },
+              x: { grid: { display: false }, ticks: { font: { family: 'Space Grotesk', size: 10 } } }
+            }
+          }
+        });
       }
 
       async function carregarEstoque(mostrarMensagem = false) {
@@ -453,6 +569,12 @@
         .getElementById("form-item")
         .addEventListener("submit", async evento => {
           evento.preventDefault();
+          const perfilAtual = localStorage.getItem('statiot_user_role') || 'viewer';
+          if (perfilAtual !== 'admin' && perfilAtual !== 'operador') {
+            alert('Acesso negado: Seu perfil não possui permissão para cadastrar novos itens.');
+            return;
+          }
+
           const botao = evento.currentTarget.querySelector(
             'button[type="submit"]'
           );
@@ -478,7 +600,7 @@
               throw new Error(erro.detail || "Não foi possível cadastrar.");
             }
             alert("Item cadastrado com sucesso!");
-            evento.currentTarget.reset();
+            evento.currentTarget?.reset();
             carregarEstoque();
           } catch (erro) {
             alert(`Erro: ${erro.message || "Não foi possível cadastrar."}`);
@@ -492,6 +614,13 @@
         .getElementById("form-mov")
         .addEventListener("submit", async evento => {
           evento.preventDefault();
+          const perfilAtual = (localStorage.getItem('statiot_user_role') || 'viewer').trim().toLowerCase();
+          
+          if (perfilAtual !== 'admin' && perfilAtual !== 'operador') {
+            alert('Acesso negado: Seu perfil não possui permissão para realizar lançamentos.');
+            return;
+          }
+
           const quantidade = parseInt(
             document.getElementById("mov-qtd").value,
             10
@@ -523,7 +652,7 @@
               );
             }
             alert("Movimentação registrada com sucesso!");
-            evento.currentTarget.reset();
+            evento.currentTarget?.reset();
             document.querySelector(
               'input[name="mov-tipo"][value="Entrada"]'
             ).checked = true;
@@ -538,6 +667,47 @@
             botao.querySelector("span").textContent = "Registrar lançamento";
           }
         });
+
+      // Gerenciamento visual de perfis e Layout Dinâmico
+      document.addEventListener("DOMContentLoaded", () => {
+        const roleAtual = (localStorage.getItem('statiot_user_role') || 'viewer').trim().toLowerCase();
+        const nomeUsuario = localStorage.getItem('statiot_user_name') || 'Visitante';
+
+        const linkUsuarios = document.getElementById('link-menu-usuarios');
+                if (linkUsuarios) {
+                    if (roleAtual !== 'admin') {
+                        linkUsuarios.style.display = 'none';
+                    }
+                }
+
+        const railStatus = document.querySelector('.rail-status');
+        if (railStatus) {
+            railStatus.innerHTML = `<span class="status-pulse"></span> ${nomeUsuario} (${roleAtual.toUpperCase()}) | <a href="login.html" style="color: var(--signal); text-decoration: none; margin-left: 6px;">Sair</a>`;
+        }
+
+        let cardsVisiveis = 0;
+
+        document.querySelectorAll('[data-role]').forEach(elemento => {
+            const permissoesPermitidas = elemento.getAttribute('data-role').split(',').map(r => r.trim().toLowerCase());
+            
+            if (!permissoesPermitidas.includes(roleAtual)) {
+                elemento.style.display = 'none';
+            } else {
+                cardsVisiveis++;
+            }
+        });
+
+        const gridOperacoes = document.querySelector('.operations-grid');
+        if (gridOperacoes) {
+            if (cardsVisiveis === 0) {
+                gridOperacoes.style.display = 'none'; 
+                document.querySelector('.workspace-header').style.minHeight = '180px'; 
+            } else if (cardsVisiveis === 1) {
+                gridOperacoes.style.gridTemplateColumns = '1fr';
+                gridOperacoes.style.maxWidth = '600px'; 
+            }
+        }
+      });
 
       function atualizarTipoMovimentacao() {
         document
@@ -600,14 +770,6 @@
             );
             fecharLeitor();
           });
-      }
-
-      // Exemplo de proteção nos formulários:
-      const perfilAtual = localStorage.getItem('statiot_user_role') || 'viewer';
-
-      if (perfilAtual === 'viewer') {
-          alert('Acesso negado: Seu perfil (Visualizador) possui permissão apenas de leitura.');
-          return; // Interrompe a execução antes de tentar enviar ou resetar
       }
 
       function fecharLeitor() {

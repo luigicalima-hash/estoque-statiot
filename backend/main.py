@@ -361,3 +361,93 @@ def excluir_item(codigo: str):
     conn.commit()
     conn.close()
     return {"mensagem": "Item excluído com sucesso!"}
+
+    from pydantic import BaseModel, EmailStr
+
+# Modelo para cadastro de usuário
+class UsuarioCreate(BaseModel):
+    nome: str
+    email: EmailStr
+    senha: str
+    role: str  # 'admin', 'operador' ou 'viewer'
+
+# Inicialização da tabela de usuários (adicione na sua função de criação de tabelas)
+def criar_tabela_usuarios():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            senha TEXT NOT NULL,
+            role TEXT NOT NULL
+        )
+    """)
+    # Cria usuários padrão caso a tabela esteja vazia
+    cursor.execute("SELECT COUNT(*) FROM usuarios")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("INSERT INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)",
+                       ("Administrador", "admin@statiot.com", "admin123", "admin"))
+        cursor.execute("INSERT INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)",
+                       ("Operador Padrão", "operador@statiot.com", "op123", "operador"))
+        cursor.execute("INSERT INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)",
+                       ("Visualizador", "viewer@statiot.com", "view123", "viewer"))
+        conn.commit()
+    conn.close()
+
+# Rota para listar usuários (Painel Admin)
+@app.get("/api/usuarios")
+def listar_usuarios():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nome, email, role FROM usuarios")
+    rows = cursor.fetchall()
+    conn.close()
+    return [{"id": r[0], "nome": r[1], "email": r[2], "role": r[3]} for r in rows]
+
+# Rota para cadastrar novo usuário
+@app.post("/api/usuarios")
+def criar_usuario(user: UsuarioCreate):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)",
+            (user.nome, user.email, user.senha, user.role)
+        )
+        conn.commit()
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=400, detail="E-mail já cadastrado ou dados inválidos.")
+    conn.close()
+    return {"mensagem": "Usuário cadastrado com sucesso!"}
+
+# Rota para excluir usuário
+@app.delete("/api/usuarios/{user_id}")
+def excluir_usuario(user_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM usuarios WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    return {"mensagem": "Usuário removido com sucesso!"}
+
+# Rota de Login Dinâmico
+class LoginPayload(BaseModel):
+    email: str
+    senha: str
+
+@app.post("/api/login")
+def fazer_login(payload: LoginPayload):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT nome, role FROM usuarios WHERE LOWER(email) = LOWER(?) AND senha = ?", 
+                   (payload.email.strip(), payload.senha))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="E-mail ou senha incorretos.")
+    
+    return {"nome": user[0], "role": user[1]}
