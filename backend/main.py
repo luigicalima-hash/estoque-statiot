@@ -365,9 +365,12 @@ def excluir_item(codigo: str):
     from pydantic import BaseModel, EmailStr
 
 # Modelo para cadastro de usuário
+from pydantic import BaseModel
+
+# Altere esta classe no seu main.py:
 class UsuarioCreate(BaseModel):
     nome: str
-    email: EmailStr
+    email: str  # Alterado de EmailStr para str para evitar dependências externas
     senha: str
     role: str  # 'admin', 'operador' ou 'viewer'
 
