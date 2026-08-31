@@ -11,6 +11,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 import os
 from PIL import Image
+import csv
 
 app = FastAPI(title="Statiot Inventory API")
 
@@ -65,7 +66,7 @@ def init_db():
         )
     ''')
 
-    # Dados iniciais
+    # Dados iniciais de itens
     cursor.execute("INSERT OR IGNORE INTO itens (codigo, nome, estoque_minimo, localizacao, responsavel) VALUES ('M8x30', 'Parafuso sextavado M8x30', 200, 'Prateleira A - Setor 02', NULL)")
     cursor.execute("INSERT OR IGNORE INTO itens (codigo, nome, estoque_minimo, localizacao, responsavel) VALUES ('CH3', 'Chapa aço carbono 3mm', 10, 'Almoxarifado Central', NULL)")
     cursor.execute("INSERT OR IGNORE INTO itens (codigo, nome, estoque_minimo, localizacao, responsavel) VALUES ('NB-01', 'Notebook Dell Latitude', 1, 'TI - Sala de Suporte', 'Carlos Silva')")
@@ -80,19 +81,47 @@ def init_db():
     conn.commit()
     conn.close()
 
+# Inicializa o banco de itens e movimentações
 init_db()
 
-class ItemCreate(BaseModel):
-    codigo: str
+# --- GESTÃO DE USUÁRIOS E AUTENTICAÇÃO ---
+class UsuarioCreate(BaseModel):
     nome: str
-    estoque_minimo: int
-    localizacao: str = "Geral"
-    responsavel: str | None = None
+    email: str 
+    senha: str
+    role: str  # 'admin', 'operador' ou 'viewer'
 
-class MovimentacaoCreate(BaseModel):
-    codigo_item: str
-    tipo: str
-    quantidade: int = Field(..., gt=0)
+class LoginPayload(BaseModel):
+    email: str
+    senha: str
+
+def criar_tabela_usuarios():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            senha TEXT NOT NULL,
+            role TEXT NOT NULL
+        )
+    """)
+    # Cria usuários padrão caso a tabela esteja vazia
+    cursor.execute("SELECT COUNT(*) FROM usuarios")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("INSERT INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)",
+                       ("Administrador", "admin@statiot.com", "admin123", "admin"))
+        cursor.execute("INSERT INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)",
+                       ("Operador Padrão", "operador@statiot.com", "op123", "operador"))
+        cursor.execute("INSERT INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)",
+                       ("Visualizador", "viewer@statiot.com", "view123", "viewer"))
+        conn.commit()
+    conn.close()
+
+# Inicializa explicitamente a tabela de usuários
+criar_tabela_usuarios()
+
 
 @app.get("/api/estoque")
 def get_estoque():
@@ -160,9 +189,7 @@ def criar_movimentacao(mov: MovimentacaoCreate):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Normaliza o código para maiúsculas (ou busca ignorando case com LOWER)
     codigo_limpo = mov.codigo_item.strip()
-    
     cursor.execute("SELECT codigo FROM itens WHERE LOWER(codigo) = LOWER(?)", (codigo_limpo,))
     item_encontrado = cursor.fetchone()
     
@@ -170,9 +197,7 @@ def criar_movimentacao(mov: MovimentacaoCreate):
         conn.close()
         raise HTTPException(status_code=404, detail="Item não encontrado no cadastro.")
     
-    # Usa o código real cadastrado no banco para manter a integridade da chave estrangeira
     codigo_real = item_encontrado["codigo"]
-    
     data_atual = str(date.today())
     cursor.execute(
         "INSERT INTO movimentacoes (data, codigo_item, tipo, quantidade) VALUES (?, ?, ?, ?)",
@@ -253,11 +278,6 @@ def gerar_etiqueta_pdf(codigo: str):
         headers={"Content-Disposition": f"attachment; filename=etiqueta_{codigo}.pdf"}
     )
 
-
-from fastapi.responses import Response
-import csv
-
-# 5. Rota para Exportar Relatório em CSV / Excel
 @app.get("/api/exportar/csv")
 def exportar_csv():
     conn = get_db_connection()
@@ -290,14 +310,11 @@ def exportar_csv():
     rows = cursor.fetchall()
     conn.close()
 
-    # Cria o arquivo CSV em memória
     output = io.StringIO()
-    writer = csv.writer(output, delimiter=';') # Usamos ponto e vírgula para abrir perfeitamente no Excel em Português
+    writer = csv.writer(output, delimiter=';')
     
-    # Cabeçalho do CSV
     writer.writerow(["Código", "Item", "Localização", "Responsável", "Saldo Atual", "Estoque Mínimo", "Status"])
     
-    # Linhas de dados
     for row in rows:
         writer.writerow([
             row["Codigo"], 
@@ -312,14 +329,10 @@ def exportar_csv():
     csv_content = output.getvalue()
     
     return Response(
-        content=csv_content.encode("utf-8-sig"), # utf-8-sig garante que acentos apareçam corretamente no Excel
+        content=csv_content.encode("utf-8-sig"),
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=relatorio_estoque_statiot.csv"}
     )
-
-
-
-    from pydantic import BaseModel, Field
 
 class ItemUpdate(BaseModel):
     nome: str
@@ -327,7 +340,6 @@ class ItemUpdate(BaseModel):
     localizacao: str
     responsavel: str | None = None
 
-# Rota para Editar Item
 @app.put("/api/itens/{codigo}")
 def atualizar_item(codigo: str, item: ItemUpdate):
     conn = get_db_connection()
@@ -345,7 +357,6 @@ def atualizar_item(codigo: str, item: ItemUpdate):
     conn.close()
     return {"mensagem": "Item atualizado com sucesso!"}
 
-# Rota para Excluir Item
 @app.delete("/api/itens/{codigo}")
 def excluir_item(codigo: str):
     conn = get_db_connection()
@@ -355,51 +366,12 @@ def excluir_item(codigo: str):
         conn.close()
         raise HTTPException(status_code=404, detail="Item não encontrado.")
     
-    # Remove as movimentações vinculadas primeiro para respeitar a chave estrangeira
     cursor.execute("DELETE FROM movimentacoes WHERE LOWER(codigo_item) = LOWER(?)", (codigo,))
     cursor.execute("DELETE FROM itens WHERE LOWER(codigo) = LOWER(?)", (codigo,))
     conn.commit()
     conn.close()
     return {"mensagem": "Item excluído com sucesso!"}
 
-    from pydantic import BaseModel, EmailStr
-
-# Modelo para cadastro de usuário
-from pydantic import BaseModel
-
-# Altere esta classe no seu main.py:
-class UsuarioCreate(BaseModel):
-    nome: str
-    email: str  # Alterado de EmailStr para str para evitar dependências externas
-    senha: str
-    role: str  # 'admin', 'operador' ou 'viewer'
-
-# Inicialização da tabela de usuários (adicione na sua função de criação de tabelas)
-def criar_tabela_usuarios():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            senha TEXT NOT NULL,
-            role TEXT NOT NULL
-        )
-    """)
-    # Cria usuários padrão caso a tabela esteja vazia
-    cursor.execute("SELECT COUNT(*) FROM usuarios")
-    if cursor.fetchone()[0] == 0:
-        cursor.execute("INSERT INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)",
-                       ("Administrador", "admin@statiot.com", "admin123", "admin"))
-        cursor.execute("INSERT INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)",
-                       ("Operador Padrão", "operador@statiot.com", "op123", "operador"))
-        cursor.execute("INSERT INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)",
-                       ("Visualizador", "viewer@statiot.com", "view123", "viewer"))
-        conn.commit()
-    conn.close()
-
-# Rota para listar usuários (Painel Admin)
 @app.get("/api/usuarios")
 def listar_usuarios():
     conn = get_db_connection()
@@ -409,7 +381,6 @@ def listar_usuarios():
     conn.close()
     return [{"id": r[0], "nome": r[1], "email": r[2], "role": r[3]} for r in rows]
 
-# Rota para cadastrar novo usuário
 @app.post("/api/usuarios")
 def criar_usuario(user: UsuarioCreate):
     conn = get_db_connection()
@@ -426,7 +397,6 @@ def criar_usuario(user: UsuarioCreate):
     conn.close()
     return {"mensagem": "Usuário cadastrado com sucesso!"}
 
-# Rota para excluir usuário
 @app.delete("/api/usuarios/{user_id}")
 def excluir_usuario(user_id: int):
     conn = get_db_connection()
@@ -435,11 +405,6 @@ def excluir_usuario(user_id: int):
     conn.commit()
     conn.close()
     return {"mensagem": "Usuário removido com sucesso!"}
-
-# Rota de Login Dinâmico
-class LoginPayload(BaseModel):
-    email: str
-    senha: str
 
 @app.post("/api/login")
 def fazer_login(payload: LoginPayload):

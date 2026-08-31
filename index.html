@@ -27,7 +27,130 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-      /* Estilos refinados para os painéis de gráficos dentro da estética */
+      /* Estilos refinados para a nova identidade da logo e painel ativo */
+      .brand-mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--line);
+        padding: 6px 10px;
+        border-radius: 4px;
+      }
+      .brand-mark img {
+        height: 22px;
+        width: auto;
+        object-fit: contain;
+        display: block;
+      }
+      
+      /* Painel Ativo Executivo & Charmoso */
+     .active-panel-modern {
+        background: linear-gradient(135deg, #181917 0%, #0d0e0d 100%);
+        border: 1px solid var(--line);
+        border-top: 3px solid var(--signal);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        box-shadow: 0 20px 40px rgb(0 0 0 / 40%);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+
+      /* Efeito de grade tecnológica de fundo (Tech Grid Overlay) */
+      .active-panel-modern::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: 
+          linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 20px 20px;
+        pointer-events: none;
+      }
+
+      /* Elemento gráfico tecnológico decorativo no canto (Radar / Círculo Pulsante) */
+      .tech-radar-glow {
+        position: absolute;
+        right: -20px;
+        bottom: -20px;
+        width: 120px;
+        height: 120px;
+        border: 1px dashed rgba(189, 94, 60, 0.25);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .tech-radar-glow::after {
+        content: "";
+        width: 60px;
+        height: 60px;
+        border: 1px solid rgba(189, 94, 60, 0.4);
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(189, 94, 60, 0.15) 0%, transparent 70%);
+      }
+
+      .panel-header-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 10px;
+        position: relative;
+        z-index: 1;
+      }
+      .panel-header-top span {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 0.65rem;
+        letter-spacing: 0.15em;
+        color: #8c8d85;
+        text-transform: uppercase;
+      }
+      .panel-header-top img {
+        height: 16px;
+        width: auto;
+        opacity: 0.7;
+      }
+      .panel-metric-display {
+        border-left: 2px solid var(--signal);
+        padding-left: 12px;
+        margin: 5px 0 10px;
+        position: relative;
+        z-index: 1;
+      }
+      .panel-metric-display .label {
+        display: block;
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        color: #8c8d85;
+        text-transform: uppercase;
+        font-family: "Space Grotesk", sans-serif;
+      }
+      .panel-metric-display strong {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 2.2rem;
+        color: #f5f5f0;
+        letter-spacing: -0.04em;
+      }
+      .panel-footer-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.72rem;
+        color: #a3a49e;
+        font-family: "Space Grotesk", sans-serif;
+        margin-top: 8px;
+        padding-top: 8px;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Estilos dos gráficos analíticos */
       .analytics-section {
         margin-top: 45px;
         display: grid;
@@ -69,12 +192,13 @@
             href="#operacao"
             aria-label="Statiot, ir para operações"
           >
-            <span class="brand-mark"
-              ><img
+            <span class="brand-mark">
+              <img
                 src="log-png.png"
                 alt="Logo Statiot"
                 onerror="this.style.display='none'"
-            /></span>
+              />
+            </span>
             <span class="brand-wordmark">Statiot</span>
           </a>
 
@@ -116,12 +240,13 @@
             href="#operacao"
             aria-label="Statiot, ir para operações"
           >
-            <span class="brand-mark"
-              ><img
+            <span class="brand-mark">
+              <img
                 src="log-png.png"
                 alt="Logo Statiot"
                 onerror="this.style.display='none'"
-            /></span>
+              />
+            </span>
             <span class="brand-wordmark">Statiot</span>
           </a>
           <span class="mobile-status"
@@ -142,15 +267,21 @@
               operação.
             </p>
           </div>
-          <div
-            class="header-visual"
-            aria-label="Visual abstrato de organização de estoque"
-          >
-            <div class="shelf shelf-one"><i></i><i></i><i></i></div>
-            <div class="shelf shelf-two"><i></i><i></i><i></i><i></i></div>
-            <div class="header-visual-label">
-              <span>PAINEL ATIVO</span
-              ><strong id="header-total">— itens</strong>
+          
+          <!-- NOVO PAINEL ATIVO EXECUTIVO & CHARMOSO -->
+          <!-- PAINEL ATIVO TECNOLÓGICO -->
+          <div class="header-visual active-panel-modern" aria-label="Painel ativo Statiot">
+            <div class="tech-radar-glow"></div>
+            <div class="panel-header-top">
+              <span>ESTOQUE CENTRAL</span>
+              <img src="log-png.png" alt="Mini Logo" onerror="this.style.display='none'" />
+            </div>
+            <div class="panel-metric-display">
+              <span class="label">PAINEL ATIVO</span>
+              <strong id="header-total">— itens</strong>
+            </div>
+            <div class="panel-footer-status">
+              <span class="status-pulse"></span> Sincronizado em tempo real
             </div>
           </div>
         </section>

@@ -94,7 +94,9 @@
       </div>
     </div>
 
-    <script>
+   <script>
+      const API_URL = "https://estoque-statiot.onrender.com";
+
       function preencher(email, senha) {
         document.getElementById('userEmail').value = email;
         document.getElementById('userPass').value = senha;
@@ -102,10 +104,19 @@
 
       document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        
         const email = document.getElementById('userEmail').value.trim();
         const senha = document.getElementById('userPass').value.trim();
+        const botao = e.currentTarget.querySelector('button[type="submit"]');
+        const textoOriginal = botao.innerHTML;
 
         try {
+          // Feedback visual de carregamento (essencial para servidores na nuvem que demoram para acordar)
+          botao.disabled = true;
+          botao.innerHTML = '<span>Validando acesso...</span><i class="fa-solid fa-spinner fa-spin"></i>';
+
+          console.log("Enviando requisição de login para:", `${API_URL}/api/login`);
+
           const resposta = await fetch(`${API_URL}/api/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -113,21 +124,27 @@
           });
 
           if (!resposta.ok) {
-            throw new Error('E-mail ou senha inválidos.');
+            const erroDetalhe = await resposta.json().catch(() => ({}));
+            throw new Error(erroDetalhe.detail || 'E-mail ou senha inválidos.');
           }
 
           const dados = await resposta.json();
+          console.log("Login bem-sucedido:", dados);
           
           // Salva os dados reais retornados pelo banco
           localStorage.setItem('statiot_user_role', dados.role);
           localStorage.setItem('statiot_user_name', dados.nome);
           
+          // Redireciona para o painel principal
           window.location.href = 'index.html';
+
         } catch (erro) {
+          console.error("Erro no login:", erro);
           alert(`Erro de acesso: ${erro.message}`);
+          botao.disabled = false;
+          botao.innerHTML = textoOriginal;
         }
       });
-      
     </script>
   </body>
 </html>
