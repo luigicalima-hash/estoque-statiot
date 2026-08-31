@@ -210,6 +210,7 @@ def criar_movimentacao(mov: MovimentacaoCreate):
     conn = get_db_connection()
     cursor = conn.cursor()
     
+    # 1. Verifica se o item existe no cadastro
     codigo_limpo = mov.codigo_item.strip()
     cursor.execute("SELECT codigo FROM itens WHERE LOWER(codigo) = LOWER(?)", (codigo_limpo,))
     item_encontrado = cursor.fetchone()
@@ -219,6 +220,29 @@ def criar_movimentacao(mov: MovimentacaoCreate):
         raise HTTPException(status_code=404, detail="Item não encontrado no cadastro.")
     
     codigo_real = item_encontrado["codigo"]
+    
+    # 2. NOVA REGRA DE NEGÓCIO: Bloquear saída se não houver saldo suficiente
+    if mov.tipo == "Saída":
+        cursor.execute('''
+            SELECT 
+                COALESCE(SUM(CASE WHEN tipo = 'Entrada' THEN quantidade ELSE 0 END), 0) - 
+                COALESCE(SUM(CASE WHEN tipo = 'Saída' THEN quantidade ELSE 0 END), 0) AS saldo
+            FROM movimentacoes
+            WHERE codigo_item = ?
+        ''', (codigo_real,))
+        
+        resultado = cursor.fetchone()
+        saldo_atual = resultado["saldo"] if resultado else 0
+        
+        # Se a pessoa tentar tirar mais do que tem, bloqueia!
+        if mov.quantidade > saldo_atual:
+            conn.close()
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Saldo insuficiente! Você tem {saldo_atual} unidades no estoque, mas tentou retirar {mov.quantidade}."
+            )
+    
+    # 3. Registra a movimentação caso passe pela validação
     data_atual = str(date.today())
     cursor.execute(
         "INSERT INTO movimentacoes (data, codigo_item, tipo, quantidade) VALUES (?, ?, ?, ?)",
