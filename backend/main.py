@@ -466,3 +466,30 @@ def fazer_login(payload: LoginPayload):
         raise HTTPException(status_code=401, detail="E-mail ou senha incorretos.")
     
     return {"nome": user[0], "role": user[1]}
+
+
+@app.get("/api/admin/auditoria")
+def get_relatorio_auditoria():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # 1. Rastreabilidade Completa (Últimas 100 movimentações)
+    cursor.execute('''
+        SELECT m.id, m.data, m.codigo_item, i.nome as nome_item, m.tipo, m.quantidade, m.usuario
+        FROM movimentacoes m
+        LEFT JOIN itens i ON m.codigo_item = i.codigo
+        ORDER BY m.id DESC LIMIT 100
+    ''')
+    movimentacoes = [dict(row) for row in cursor.fetchall()]
+    
+    # 2. Ranking de Usuários (Quem fez mais movimentações)
+    cursor.execute('''
+        SELECT usuario, COUNT(id) as total_movimentacoes 
+        FROM movimentacoes 
+        GROUP BY usuario 
+        ORDER BY total_movimentacoes DESC
+    ''')
+    ranking = [dict(row) for row in cursor.fetchall()]
+    
+    conn.close()
+    return {"movimentacoes": movimentacoes, "ranking": ranking}

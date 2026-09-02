@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statiot - Painel de Auditoria</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* Estilo Oficial Oficina Contemporânea (Baseado na UI principal) */
+    :root {
+      --bg-body: #f8f7f5;
+      --bg-tabela: #ffffff;
+      --texto-escuro: #111111;
+      --texto-cinza: #6b7280;
+      --ferrugem: #c2410c; 
+      --borda: #e5e7eb;
+      --verde-badge: #065f46;
+      --verde-bg: #d1fae5;
+      --vermelho-badge: #991b1b;
+      --vermelho-bg: #fee2e2;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--texto-escuro);
+      margin: 0;
+      padding: 3rem 4rem;
+    }
+
+    /* Cabeçalho espelhando a tela de Saldo Atual */
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 2.5rem;
+    }
+
+    .titles-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--texto-cinza);
+      text-transform: uppercase;
+    }
+
+    .indicator .line {
+      width: 24px;
+      height: 2px;
+      background-color: var(--ferrugem);
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin: 0;
+      color: var(--texto-escuro);
+    }
+
+    /* Botões Padrão Statiot */
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.7rem 1.2rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 2px; /* Cantos quase retos */
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      transition: all 0.2s;
+    }
+
+    .btn-outline {
+      background-color: #fff;
+      color: var(--texto-escuro);
+      border: 1px solid #ccc;
+    }
+
+    .btn-outline:hover {
+      background-color: #f3f4f6;
+    }
+
+    .btn-solid {
+      background-color: var(--texto-escuro);
+      color: #fff;
+      border: 1px solid var(--texto-escuro);
+    }
+
+    .btn-solid:hover {
+      background-color: #333;
+    }
+
+    /* Grid do Dashboard */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    /* Gráfico */
+    .chart-box {
+      background: var(--bg-tabela);
+      padding: 1.5rem;
+      border: 1px solid var(--borda);
+      border-radius: 2px;
+    }
+
+    .chart-box h3 {
+      margin-top: 0;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--texto-cinza);
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--borda);
+    }
+
+    /* Tabela Idêntica à principal */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    thead {
+      border-top: 1px solid var(--borda);
+      border-bottom: 1px solid var(--borda);
+    }
+
+    th {
+      padding: 1rem 0.5rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--texto-cinza);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    td {
+      padding: 1.2rem 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--texto-escuro);
+      background-color: var(--bg-tabela);
+      border-bottom: 1px solid var(--borda);
+    }
+
+    td.muted {
+      color: var(--texto-cinza);
+      font-weight: 500;
+    }
+
+    /* Badges de Status / Ação */
+    .badge {
+      padding: 0.3rem 0.6rem;
+      border-radius: 2px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      display: inline-block;
+    }
+
+    .badge-entrada { 
+      background-color: var(--verde-bg); 
+      color: var(--verde-badge); 
+      border-color: #a7f3d0;
+    }
+    
+    .badge-saida { 
+      background-color: var(--vermelho-bg); 
+      color: var(--vermelho-badge); 
+      border-color: #fecaca;
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      body {
+        padding: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header-top">
+    <div class="titles-wrapper">
+      <div class="indicator">
+        <span class="line"></span> 
+        AUDITORIA &nbsp;&nbsp; RASTREABILIDADE EM TEMPO REAL
+      </div>
+      <h1>Painel Administrativo</h1>
+    </div>
+    
+    <div class="btn-group">
+      <a href="index.html" class="btn btn-outline">Voltar ao Sistema</a>
+    </div>
+  </header>
+
+  <div class="dashboard-grid">
+    
+    <!-- Gráfico Lateral -->
+    <div class="chart-box">
+      <h3>Volume por Usuário</h3>
+      <canvas id="graficoUsuarios"></canvas>
+    </div>
+
+    <!-- Tabela Principal -->
+    <div class="table-container">
+      <table id="tabela-auditoria">
+        <thead>
+          <tr>
+            <th>ID / Data</th>
+            <th>Código / Item</th>
+            <th>Ação</th>
+            <th>Qtd</th>
+            <th>Usuário Responsável</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Preenchido via JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    // 1. Verificação de segurança (Admin)
+    const role = (localStorage.getItem('statiot_user_role') || '').trim().toLowerCase();
+    if (role !== 'admin') {
+      alert("Acesso Negado: Apenas administradores possuem acesso à auditoria.");
+      window.location.href = "index.html";
+    }
+
+    // URL da sua API
+    const API_URL = "https://estoque-statiot.onrender.com"; 
+    let myChart = null;
+
+    // Função de formatação de data (opcional, para deixar mais clean)
+    function formatarData(dataString) {
+      if (!dataString) return '-';
+      const partes = dataString.split('-');
+      if(partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
+      return dataString;
+    }
+
+    async function carregarAuditoria() {
+      try {
+        const resposta = await fetch(`${API_URL}/api/admin/auditoria`);
+        if (!resposta.ok) throw new Error("Erro ao buscar dados do servidor");
+        
+        const dados = await resposta.json();
+        renderizarTabela(dados.movimentacoes);
+        renderizarGrafico(dados.ranking);
+        
+      } catch (erro) {
+        console.error(erro);
+        alert("Falha ao carregar o painel de auditoria.");
+      }
+    }
+
+    function renderizarTabela(movimentacoes) {
+      const tbody = document.querySelector("#tabela-auditoria tbody");
+      tbody.innerHTML = "";
+
+      movimentacoes.forEach(mov => {
+        const tr = document.createElement("tr");
+        const badgeClass = mov.tipo === "Entrada" ? "badge-entrada" : "badge-saida";
+        const icon = mov.tipo === "Entrada" ? "↓" : "↑";
+        
+        tr.innerHTML = `
+          <td>
+            #${mov.id} <br>
+            <small class="muted">${formatarData(mov.data)}</small>
+          </td>
+          <td>
+            ${mov.codigo_item} <br>
+            <small class="muted">${mov.nome_item || 'Desconhecido'}</small>
+          </td>
+          <td><span class="badge ${badgeClass}">${icon} ${mov.tipo}</span></td>
+          <td>${mov.quantidade}</td>
+          <td>${mov.usuario || 'Sistema'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderizarGrafico(ranking) {
+      const ctx = document.getElementById('graficoUsuarios').getContext('2d');
+      const labels = ranking.map(r => r.usuario || 'Sistema');
+      const valores = ranking.map(r => r.total_movimentacoes);
+
+      if (myChart) myChart.destroy();
+
+      myChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: valores,
+            backgroundColor: ['#111111', '#c2410c', '#9ca3af', '#e5e7eb'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          cutout: '75%', // Deixa o gráfico mais fino e elegante
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                font: { family: 'Inter', size: 11 },
+                color: '#6b7280'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    carregarAuditoria();
+  </script>
+</body>
+</html>
