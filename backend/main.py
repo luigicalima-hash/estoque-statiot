@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form # Adicionado UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from fastapi.responses import StreamingResponse, FileResponse, Response # Adicionado Responsefrom pydantic import BaseModel, Field
+from typing import Optional # Importante para os campos não obrigatórios
 import sqlite3
 from datetime import date
 import io
@@ -10,6 +10,7 @@ from reportlab.lib.pagesizes import mm
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 import os
+import shutil # Para salvar a nota fiscal
 from PIL import Image
 import csv
 
@@ -84,6 +85,26 @@ def init_db():
         cursor.execute("INSERT INTO movimentacoes (data, codigo_item, tipo, quantidade) VALUES ('2026-08-18', 'M8x30', 'Saída', 120)")
         cursor.execute("INSERT INTO movimentacoes (data, codigo_item, tipo, quantidade) VALUES ('2026-08-18', 'CH3', 'Entrada', 20)")
         cursor.execute("INSERT INTO movimentacoes (data, codigo_item, tipo, quantidade) VALUES ('2026-08-20', 'NB-01', 'Entrada', 1)")
+
+
+# Novas colunas (Financeiro e Garantia) - Opcionais
+    novas_colunas = [
+        ("valor_unitario", "REAL DEFAULT 0.0"),
+        ("fornecedor", "TEXT DEFAULT NULL"),
+        ("data_compra", "TEXT DEFAULT NULL"),
+        ("validade_garantia", "TEXT DEFAULT NULL"),
+        ("nota_fiscal", "TEXT DEFAULT NULL"),
+        ("caminho_nf", "TEXT DEFAULT NULL") # Para guardar onde o arquivo PDF/Imagem foi salvo
+    ]
+    
+    for coluna, tipo in novas_colunas:
+        try:
+            cursor.execute(f"ALTER TABLE itens ADD COLUMN {coluna} {tipo}")
+        except sqlite3.OperationalError:
+            pass # Coluna já existe
+
+    # Cria a pasta para guardar as notas fiscais, se não existir
+    os.makedirs("notas_fiscais", exist_ok=True)
     
     conn.commit()
     conn.close()
@@ -91,13 +112,25 @@ def init_db():
 # Inicializa o banco de itens e movimentações
 init_db()
 
-# --- MODELOS PYDANTIC (DEVEM FICAR ANTES DAS ROTAS) ---
+# O ItemCreate original continua simples para o operador não travar
 class ItemCreate(BaseModel):
     codigo: str
     nome: str
     estoque_minimo: int
     localizacao: str = "Geral"
-    responsavel: str | None = None
+    responsavel: Optional[str] = None
+
+# Novo modelo completo para o Admin
+class ItemAdminUpdate(BaseModel):
+    nome: str
+    estoque_minimo: int
+    localizacao: str
+    responsavel: Optional[str] = None
+    valor_unitario: float = 0.0
+    fornecedor: Optional[str] = None
+    data_compra: Optional[str] = None
+    validade_garantia: Optional[str] = None
+    nota_fiscal: Optional[str] = None
 
 class MovimentacaoCreate(BaseModel):
     codigo_item: str
@@ -330,6 +363,78 @@ def gerar_etiqueta_pdf(codigo: str):
         media_type="application/pdf", 
         headers={"Content-Disposition": f"attachment; filename=etiqueta_{codigo}.pdf"}
     )
+
+
+@app.put("/api/admin/itens/{codigo}")
+def atualizar_item_completo(codigo: str, item: ItemAdminUpdate):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT codigo FROM itens WHERE LOWER(codigo) = LOWER(?)", (codigo,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Item não encontrado.")
+    
+    cursor.execute('''
+        UPDATE itens SET 
+            nome = ?, estoque_minimo = ?, localizacao = ?, responsavel = ?, 
+            valor_unitario = ?, fornecedor = ?, data_compra = ?, 
+            validade_garantia = ?, nota_fiscal = ?
+        WHERE LOWER(codigo) = LOWER(?)
+    ''', (
+        item.nome, item.estoque_minimo, item.localizacao, item.responsavel, 
+        item.valor_unitario, item.fornecedor, item.data_compra, 
+        item.validade_garantia, item.nota_fiscal, codigo
+    ))
+    conn.commit()
+    conn.close()
+    return {"mensagem": "Ficha do item atualizada com sucesso!"}
+
+
+
+@app.post("/api/admin/itens/{codigo}/upload-nf")
+async def upload_nota_fiscal(codigo: str, arquivo: UploadFile = File(...)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT codigo FROM itens WHERE LOWER(codigo) = LOWER(?)", (codigo,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Item não encontrado.")
+    
+    # Salva o arquivo na pasta notas_fiscais
+    extensao = arquivo.filename.split(".")[-1]
+    nome_arquivo = f"NF_{codigo}.{extensao}"
+    caminho_destino = os.path.join("notas_fiscais", nome_arquivo)
+    
+    with open(caminho_destino, "wb") as buffer:
+        shutil.copyfileobj(arquivo.file, buffer)
+        
+    # Salva o caminho no banco de dados
+    cursor.execute("UPDATE itens SET caminho_nf = ? WHERE LOWER(codigo) = LOWER(?)", (caminho_destino, codigo))
+    conn.commit()
+    conn.close()
+    
+    return {"mensagem": "Nota Fiscal salva com sucesso!", "arquivo": nome_arquivo}
+
+
+@app.get("/api/alertas")
+def get_alertas_estoque():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT 
+            i.codigo, i.nome, i.estoque_minimo,
+            COALESCE(SUM(CASE WHEN m.tipo = 'Entrada' THEN m.quantidade ELSE 0 END), 0) - 
+            COALESCE(SUM(CASE WHEN m.tipo = 'Saída' THEN m.quantidade ELSE 0 END), 0) AS saldo_atual
+        FROM itens i
+        LEFT JOIN movimentacoes m ON i.codigo = m.codigo_item
+        GROUP BY i.codigo
+        HAVING saldo_atual <= i.estoque_minimo
+    ''')
+    alertas = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return alertas
 
 @app.get("/api/exportar/csv")
 def exportar_csv():
