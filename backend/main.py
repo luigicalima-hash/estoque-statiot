@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form # Adicionado UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, FileResponse, Response # Adicionado Responsefrom pydantic import BaseModel, Field
+from fastapi.responses import StreamingResponse, FileResponse, Response # Adicionado Response
+from pydantic import BaseModel, Field
 from typing import Optional # Importante para os campos não obrigatórios
 import sqlite3
 from datetime import date

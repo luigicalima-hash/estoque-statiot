@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statiot - Gestão de Ativos (Admin)</title>
+  
+  <style>
+    /* Estilo Oficial Oficina Contemporânea */
+    :root {
+      --bg-body: #f8f7f5;
+      --bg-box: #ffffff;
+      --texto-escuro: #111111;
+      --texto-cinza: #6b7280;
+      --ferrugem: #c2410c; 
+      --borda: #e5e7eb;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--texto-escuro);
+      margin: 0;
+      padding: 3rem 4rem;
+    }
+
+    /* Cabeçalho */
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 2.5rem;
+    }
+
+    .indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--texto-cinza);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .indicator .line {
+      width: 24px;
+      height: 2px;
+      background-color: var(--ferrugem);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin: 0.5rem 0 0 0;
+    }
+
+    /* Botões */
+    .btn {
+      padding: 0.7rem 1.2rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 2px;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-outline { background: #fff; color: var(--texto-escuro); border-color: #ccc; }
+    .btn-outline:hover { background: #f3f4f6; }
+    
+    .btn-solid { background: var(--texto-escuro); color: #fff; }
+    .btn-solid:hover { background: #333; }
+    
+    .btn-ferrugem { background: var(--ferrugem); color: #fff; }
+    .btn-ferrugem:hover { background: #9a3412; }
+
+    /* Tabela */
+    .table-container {
+      background: var(--bg-box);
+      border: 1px solid var(--borda);
+      border-radius: 2px;
+      overflow-x: auto;
+    }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { padding: 1rem; font-size: 0.75rem; color: var(--texto-cinza); text-transform: uppercase; border-bottom: 1px solid var(--borda); }
+    td { padding: 1rem; font-size: 0.9rem; font-weight: 600; border-bottom: 1px solid var(--borda); }
+    
+    /* Modal (Ficha do Item) */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
+      display: none; justify-content: center; align-items: center; z-index: 100;
+    }
+
+    .modal-content {
+      background: var(--bg-body); width: 800px; max-width: 95%;
+      border-radius: 4px; padding: 2rem; position: relative;
+      max-height: 90vh; overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 2px solid var(--ferrugem); padding-bottom: 1rem; margin-bottom: 1.5rem;
+    }
+
+    .modal-header h2 { margin: 0; font-size: 1.5rem; }
+    
+    .btn-fechar {
+      background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--texto-cinza);
+    }
+
+    /* Formulário em Grid */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .form-group.full { grid-column: span 2; }
+    
+    label { font-size: 0.8rem; font-weight: 700; color: var(--texto-cinza); text-transform: uppercase; }
+    input { 
+      padding: 0.75rem; border: 1px solid #ccc; border-radius: 2px;
+      font-family: inherit; font-size: 0.95rem; background: #fff;
+    }
+    input:focus { outline: none; border-color: var(--texto-escuro); }
+    input:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+
+    /* Seção de Upload */
+    .upload-box {
+      border: 1px dashed #ccc; padding: 1.5rem; text-align: center; background: #fff;
+      display: flex; flex-direction: column; gap: 1rem; align-items: center;
+    }
+
+    hr { border: 0; border-top: 1px solid var(--borda); margin: 2rem 0; }
+  </style>
+</head>
+<body>
+
+  <header class="header-top">
+    <div>
+      <div class="indicator"><span class="line"></span> GESTÃO AVANÇADA</div>
+      <h1>Fichas Técnicas & Custos</h1>
+    </div>
+    <div>
+      <a href="index.html" class="btn btn-outline">Voltar ao Sistema</a>
+    </div>
+  </header>
+
+  <div class="table-container">
+    <table id="tabela-admin">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Descrição do Item</th>
+          <th>Responsável</th>
+          <th>Localização</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Preenchido via JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MODAL DE EDIÇÃO COMPLETA -->
+  <div class="modal-overlay" id="modal-edicao">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Ficha do Ativo: <span id="modal-codigo-titulo"></span></h2>
+        <button class="btn-fechar" onclick="fecharModal()">&times;</button>
+      </div>
+
+      <form id="form-admin" class="form-grid">
+        <input type="hidden" id="edit-codigo">
+        
+        <div class="form-group full">
+          <label>Descrição do Item *</label>
+          <input type="text" id="edit-nome" required>
+        </div>
+
+        <div class="form-group">
+          <label>Estoque Mínimo *</label>
+          <input type="number" id="edit-minimo" required>
+        </div>
+
+        <div class="form-group">
+          <label>Localização</label>
+          <input type="text" id="edit-local">
+        </div>
+
+        <div class="form-group">
+          <label>Responsável</label>
+          <input type="text" id="edit-resp">
+        </div>
+
+        <div class="form-group">
+          <label>Valor Unitário (R$)</label>
+          <input type="number" id="edit-valor" step="0.01" placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+          <label>Fornecedor</label>
+          <input type="text" id="edit-fornecedor">
+        </div>
+
+        <div class="form-group">
+          <label>Data de Compra</label>
+          <input type="date" id="edit-data-compra">
+        </div>
+
+        <div class="form-group full">
+          <button type="submit" class="btn btn-solid" style="width: 100%; padding: 1rem;">Salvar Informações Gerais</button>
+        </div>
+      </form>
+
+      <hr>
+
+      <!-- UPLOAD DA NOTA FISCAL -->
+      <div class="upload-box">
+        <h3 style="margin: 0; font-size: 1rem;">Anexar Nota Fiscal / Comprovante</h3>
+        <p style="margin: 0; font-size: 0.8rem; color: #666;">Formatos aceitos: PDF, JPG, PNG</p>
+        <input type="file" id="nf-arquivo" accept=".pdf, image/*">
+        <button type="button" class="btn btn-ferrugem" onclick="enviarNotaFiscal()">Fazer Upload do Arquivo</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Segurança
+    const role = (localStorage.getItem('statiot_user_role') || '').trim().toLowerCase();
+    if (role !== 'admin') {
+      alert("Acesso Negado: Apenas administradores acessam a gestão avançada.");
+      window.location.href = "index.html";
+    }
+
+    // ALTERE PARA A URL DO SEU RENDER
+    const API_URL = "http://127.0.0.1:8000"; 
+
+    // Carregar a lista inicial
+    async function carregarLista() {
+      try {
+        const res = await fetch(`${API_URL}/api/estoque`);
+        const itens = await res.json();
+        const tbody = document.querySelector("#tabela-admin tbody");
+        tbody.innerHTML = "";
+
+        itens.forEach(item => {
+          tbody.innerHTML += `
+            <tr>
+              <td style="color: var(--ferrugem);">${item.Codigo}</td>
+              <td>${item.Item}</td>
+              <td>${item.Responsavel || '-'}</td>
+              <td>${item.Localizacao || '-'}</td>
+              <td>
+                <button class="btn btn-outline" onclick="abrirModal('${item.Codigo}', '${item.Item}', '${item.EstoqueMinimo}', '${item.Localizacao}', '${item.Responsavel}')">
+                  Ficha Completa
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+      } catch (e) {
+        console.error("Erro ao carregar lista:", e);
+      }
+    }
+
+    // Modal
+    function abrirModal(codigo, nome, minimo, local, resp) {
+      document.getElementById('modal-codigo-titulo').innerText = codigo;
+      document.getElementById('edit-codigo').value = codigo;
+      document.getElementById('edit-nome').value = nome;
+      document.getElementById('edit-minimo').value = minimo;
+      document.getElementById('edit-local').value = local !== 'null' ? local : '';
+      document.getElementById('edit-resp').value = resp !== 'null' ? resp : '';
+      
+      // Limpa os campos financeiros (como ainda não temos uma rota GET específica para eles, partimos do zero ou o admin atualiza)
+      document.getElementById('edit-valor').value = '';
+      document.getElementById('edit-fornecedor').value = '';
+      document.getElementById('edit-data-compra').value = '';
+      document.getElementById('nf-arquivo').value = '';
+
+      document.getElementById('modal-edicao').style.display = 'flex';
+    }
+
+    function fecharModal() {
+      document.getElementById('modal-edicao').style.display = 'none';
+    }
+
+    // Salvar Dados via PUT (Rota Completa)
+    document.getElementById('form-admin').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const codigo = document.getElementById('edit-codigo').value;
+      const payload = {
+        nome: document.getElementById('edit-nome').value,
+        estoque_minimo: parseInt(document.getElementById('edit-minimo').value),
+        localizacao: document.getElementById('edit-local').value || "Geral",
+        responsavel: document.getElementById('edit-resp').value || null,
+        valor_unitario: parseFloat(document.getElementById('edit-valor').value) || 0.0,
+        fornecedor: document.getElementById('edit-fornecedor').value || null,
+        data_compra: document.getElementById('edit-data-compra').value || null
+      };
+
+      try {
+        const btn = e.target.querySelector('button');
+        btn.textContent = "Salvando...";
+        
+        const res = await fetch(`${API_URL}/api/admin/itens/${codigo}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if(res.ok) {
+          alert("Ficha técnica atualizada com sucesso!");
+          carregarLista();
+        } else {
+          alert("Erro ao atualizar o item.");
+        }
+      } catch (erro) {
+        console.error(erro);
+        alert("Falha de conexão.");
+      } finally {
+        e.target.querySelector('button').textContent = "Salvar Informações Gerais";
+      }
+    });
+
+    // Upload de Nota Fiscal (Rota Multipart/Form-Data)
+    async function enviarNotaFiscal() {
+      const codigo = document.getElementById('edit-codigo').value;
+      const arquivoInput = document.getElementById('nf-arquivo');
+      
+      if (!arquivoInput.files[0]) {
+        alert("Por favor, selecione um arquivo primeiro.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("arquivo", arquivoInput.files[0]);
+
+      try {
+        const res = await fetch(`${API_URL}/api/admin/itens/${codigo}/upload-nf`, {
+          method: "POST",
+          body: formData
+        });
+
+        if(res.ok) {
+          const data = await res.json();
+          alert(`Upload concluído! Arquivo salvo como: ${data.arquivo}`);
+          arquivoInput.value = ''; // Limpa o input
+        } else {
+          alert("Erro ao processar o upload.");
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Erro de conexão ao enviar arquivo.");
+      }
+    }
+
+    // Init
+    carregarLista();
+  </script>
+</body>
+</html>
