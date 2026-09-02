@@ -148,11 +148,12 @@ class ItemAdminUpdate(BaseModel):
     estoque_minimo: int
     localizacao: str
     responsavel: Optional[str] = None
-    valor_unitario: float = 0.0
+    valor_unitario: float = Field(default=0.0, ge=0.0)
     fornecedor: Optional[str] = None
     data_compra: Optional[str] = None
     validade_garantia: Optional[str] = None
     nota_fiscal: Optional[str] = None
+    saldo_atual: Optional[int] = None # <-- Novo campo
 
 class MovimentacaoCreate(BaseModel):
     codigo_item: str
@@ -385,6 +386,7 @@ def atualizar_item_completo(codigo: str, item: ItemAdminUpdate):
         conn.close()
         raise HTTPException(status_code=404, detail="Item não encontrado.")
     
+    # 1. Atualiza os dados cadastrais
     cursor.execute('''
         UPDATE itens SET 
             nome = ?, estoque_minimo = ?, localizacao = ?, responsavel = ?, 
@@ -396,6 +398,35 @@ def atualizar_item_completo(codigo: str, item: ItemAdminUpdate):
         item.valor_unitario, item.fornecedor, item.data_compra, 
         item.validade_garantia, item.nota_fiscal, codigo
     ))
+    
+    # 2. Lógica de Ajuste de Estoque Automático
+    if item.saldo_atual is not None:
+        # Descobre qual é o saldo real atual no banco
+        cursor.execute('''
+            SELECT 
+                COALESCE(SUM(CASE WHEN tipo = 'Entrada' THEN quantidade ELSE 0 END), 0) - 
+                COALESCE(SUM(CASE WHEN tipo = 'Saída' THEN quantidade ELSE 0 END), 0) AS saldo
+            FROM movimentacoes
+            WHERE LOWER(codigo_item) = LOWER(?)
+        ''', (codigo,))
+        
+        resultado = cursor.fetchone()
+        saldo_banco = resultado["saldo"] if resultado else 0
+        
+        # Compara se o admin mudou o número e calcula a diferença
+        diferenca = item.saldo_atual - saldo_banco
+        
+        if diferenca != 0:
+            tipo_mov = "Entrada" if diferenca > 0 else "Saída"
+            qtd_mov = abs(diferenca) # Pega o valor absoluto para não registrar negativo
+            data_atual = str(date.today())
+            usuario_admin = "Ajuste Admin" # Ficará marcado na auditoria
+            
+            cursor.execute(
+                "INSERT INTO movimentacoes (data, codigo_item, tipo, quantidade, usuario) VALUES (?, ?, ?, ?, ?)",
+                (data_atual, codigo, tipo_mov, qtd_mov, usuario_admin)
+            )
+
     conn.commit()
     conn.close()
     return {"mensagem": "Ficha do item atualizada com sucesso!"}

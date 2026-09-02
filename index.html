@@ -180,6 +180,59 @@
           grid-template-columns: 1fr;
         }
       }
+
+      /* --- Estilos do Menu Dropdown Admin --- */
+      .admin-dropdown {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      button.dropdown-toggle {
+        background: transparent;
+        border: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        font-family: inherit;
+        color: inherit;
+      }
+
+      .dropdown-content {
+        display: none;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.02);
+        border-left: 2px solid var(--signal);
+        margin: 2px 0 10px 20px;
+        border-radius: 0 4px 4px 0;
+        overflow: hidden;
+      }
+
+      .dropdown-content.show {
+        display: flex;
+        animation: slideDown 0.2s ease-out;
+      }
+
+      .sub-link {
+        padding: 8px 12px;
+        font-size: 0.85em;
+        opacity: 0.7;
+        min-height: auto;
+      }
+
+      .sub-link:hover {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .chevron-rotate {
+        transform: rotate(180deg);
+      }
+
+      @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
     </style>
   </head>
   <body>
@@ -216,10 +269,24 @@
               ><i class="fa-solid fa-boxes-stacked"></i><span>Inventário</span
               ><i class="fa-solid fa-chevron-right chevron"></i
             ></a>
-             <a href="usuarios.html" class="rail-link" id="link-menu-usuarios">
-              <i class="fa-solid fa-users-gear"></i><span>Usuários</span>
-              <i class="fa-solid fa-chevron-right chevron"></i>
+             <!-- Menu Dropdown Admin -->
+        <div class="admin-dropdown" id="menu-admin-container" style="display: none;">
+          <button type="button" class="rail-link dropdown-toggle" onclick="toggleAdminMenu()">
+            <i class="fa-solid fa-shield-halved"></i><span>Painel Admin</span>
+            <i class="fa-solid fa-chevron-down chevron" id="admin-chevron" style="transition: transform 0.2s;"></i>
+          </button>
+          <div class="dropdown-content" id="admin-dropdown-content">
+            <a href="dashboard-admin.html" class="rail-link sub-link">
+              <i class="fa-solid fa-chart-line"></i><span>Auditoria</span>
             </a>
+            <a href="admin-itens.html" class="rail-link sub-link">
+              <i class="fa-solid fa-file-invoice-dollar"></i><span>Fichas & Custos</span>
+            </a>
+            <a href="usuarios.html" class="rail-link sub-link">
+              <i class="fa-solid fa-users-gear"></i><span>Usuários</span>
+            </a>
+          </div>
+        </div>
             <a href="#exportar" class="rail-link"
               ><i class="fa-regular fa-file-excel"></i><span>Exportação</span
               ><i class="fa-solid fa-chevron-right chevron"></i
@@ -793,16 +860,29 @@
       });
 
       // Gerenciamento visual de perfis e Layout Dinâmico
+      // 1. COLOQUE A FUNÇÃO AQUI FORA, ANTES DO DOMContentLoaded
+      function toggleAdminMenu() {
+        const content = document.getElementById('admin-dropdown-content');
+        const chevron = document.getElementById('admin-chevron');
+        
+        content.classList.toggle('show');
+        chevron.classList.toggle('chevron-rotate');
+      }
+
+      // Gerenciamento visual de perfis e Layout Dinâmico
       document.addEventListener("DOMContentLoaded", () => {
         const roleAtual = (localStorage.getItem('statiot_user_role') || 'viewer').trim().toLowerCase();
         const nomeUsuario = localStorage.getItem('statiot_user_name') || 'Visitante';
 
-        const linkUsuarios = document.getElementById('link-menu-usuarios');
-                if (linkUsuarios) {
-                    if (roleAtual !== 'admin') {s
-                        linkUsuarios.style.display = 'none';
-                    }
-                }
+        // Controle de visibilidade do menu Admin
+        const menuAdmin = document.getElementById('menu-admin-container');
+        if (menuAdmin) {
+            if (roleAtual === 'admin') {
+                menuAdmin.style.display = 'flex'; // Mostra só para admin
+            } else {
+                menuAdmin.style.display = 'none'; // Esconde para os outros
+            }
+        }
 
         const railStatus = document.querySelector('.rail-status');
         if (railStatus) {

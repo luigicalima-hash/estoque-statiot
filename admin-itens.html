@@ -145,6 +145,13 @@
           <input type="number" id="edit-minimo" min="1" required>
         </div>
 
+        <!-- ADICIONE ESTE BLOCO NOVO AQUI -->
+        <div class="form-group">
+          <label style="color: var(--ferrugem);">Saldo Físico (Ajuste)</label>
+          <input type="number" id="edit-saldo" min="0" required>
+        </div>
+        <!-- FIM DO BLOCO NOVO -->
+
         <div class="form-group">
           <label>Localização</label>
           <input type="text" id="edit-local">
@@ -195,7 +202,7 @@
       window.location.href = "index.html";
     }
 
-    const API_URL = "http://127.0.0.1:8000"; // ATUALIZE PARA O SEU RENDER
+    const API_URL = "https://estoque-statiot.onrender.com"; // ATUALIZE PARA O SEU RENDER
 
     // Formata Moeda
     const formataReal = (valor) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
@@ -234,10 +241,12 @@
             <td class="valor-total">${formataReal(valorTotal)}</td>
             <td>${btnNF}</td>
             <td>
+              <td>
               <button class="btn btn-outline" onclick="abrirModal(
                 '${item.Codigo}', '${item.Item}', '${item.EstoqueMinimo}', 
                 '${safeData(item.Localizacao)}', '${safeData(item.Responsavel)}', 
-                '${valorUnitario}', '${safeData(item.fornecedor)}', '${safeData(item.data_compra)}'
+                '${valorUnitario}', '${safeData(item.fornecedor)}', '${safeData(item.data_compra)}',
+                '${saldo}' // <-- Parâmetro novo aqui
               )">Editar</button>
             </td>
           `;
@@ -249,11 +258,13 @@
     }
 
     // Modal com Recuperação Total de Dados
-    function abrirModal(codigo, nome, minimo, local, resp, valor, forn, dataCompra) {
+    // Adicione a variável saldoAtual no final
+    function abrirModal(codigo, nome, minimo, local, resp, valor, forn, dataCompra, saldoAtual) {
       document.getElementById('modal-codigo-titulo').innerText = codigo;
       document.getElementById('edit-codigo').value = codigo;
       document.getElementById('edit-nome').value = nome;
       document.getElementById('edit-minimo').value = minimo;
+      document.getElementById('edit-saldo').value = saldoAtual; // <-- Preenche o input
       document.getElementById('edit-local').value = local;
       document.getElementById('edit-resp').value = resp;
       document.getElementById('edit-valor').value = valor !== "0" ? valor : "";
@@ -278,6 +289,7 @@
         nome: document.getElementById('edit-nome').value,
         estoque_minimo: parseInt(document.getElementById('edit-minimo').value),
         localizacao: document.getElementById('edit-local').value || "Geral",
+        saldo_atual: parseInt(document.getElementById('edit-saldo').value),
         responsavel: document.getElementById('edit-resp').value || null,
         valor_unitario: valorInput || 0.0,
         fornecedor: document.getElementById('edit-fornecedor').value || null,
