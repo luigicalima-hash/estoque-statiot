@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form # Adicionado 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse, Response # Adicionado Response
 from pydantic import BaseModel, Field
+from fastapi.staticfiles import StaticFiles  # Adicione esta linha junto aos outros imports
 from typing import Optional # Importante para os campos não obrigatórios
 import sqlite3
 from datetime import date
@@ -16,6 +17,23 @@ from PIL import Image
 import csv
 
 app = FastAPI(title="Statiot Inventory API")
+
+# Libera a pasta de notas fiscais para o navegador acessar os PDFs
+app.mount("/notas_fiscais", StaticFiles(directory="notas_fiscais"), name="notas_fiscais")
+
+# ... (seu código de banco de dados continua igual) ...
+
+# Atualize o modelo do Admin para barrar valores negativos no backend
+class ItemAdminUpdate(BaseModel):
+    nome: str
+    estoque_minimo: int
+    localizacao: str
+    responsavel: Optional[str] = None
+    valor_unitario: float = Field(default=0.0, ge=0.0) # <--- Impede negativo
+    fornecedor: Optional[str] = None
+    data_compra: Optional[str] = None
+    validade_garantia: Optional[str] = None
+    nota_fiscal: Optional[str] = None
 
 app.add_middleware(
     CORSMiddleware,
@@ -191,27 +209,15 @@ def get_estoque():
     conn = get_db_connection()
     query = '''
         SELECT 
-            i.nome AS Item,
-            i.codigo AS Codigo,
-            i.localizacao AS Localizacao,
-            i.responsavel AS Responsavel,
+            i.nome AS Item, i.codigo AS Codigo, i.localizacao AS Localizacao, 
+            i.responsavel AS Responsavel, i.valor_unitario, i.fornecedor, 
+            i.data_compra, i.caminho_nf,
             COALESCE(SUM(CASE WHEN m.tipo = 'Entrada' THEN m.quantidade ELSE 0 END), 0) - 
             COALESCE(SUM(CASE WHEN m.tipo = 'Saída' THEN m.quantidade ELSE 0 END), 0) AS Saldo,
-            i.estoque_minimo AS EstoqueMinimo,
-            CASE 
-                WHEN (
-                    COALESCE(SUM(CASE WHEN m.tipo = 'Entrada' THEN m.quantidade ELSE 0 END), 0) - 
-                    COALESCE(SUM(CASE WHEN m.tipo = 'Saída' THEN m.quantidade ELSE 0 END), 0)
-                ) <= 0 THEN 'Zerado'
-                WHEN (
-                    COALESCE(SUM(CASE WHEN m.tipo = 'Entrada' THEN m.quantidade ELSE 0 END), 0) - 
-                    COALESCE(SUM(CASE WHEN m.tipo = 'Saída' THEN m.quantidade ELSE 0 END), 0)
-                ) < i.estoque_minimo THEN 'Repor'
-                ELSE 'OK'
-            END AS Status
+            i.estoque_minimo AS EstoqueMinimo
         FROM itens i
         LEFT JOIN movimentacoes m ON i.codigo = m.codigo_item
-        GROUP BY i.codigo, i.nome, i.estoque_minimo, i.localizacao, i.responsavel;
+        GROUP BY i.codigo, i.nome, i.estoque_minimo, i.localizacao, i.responsavel, i.valor_unitario, i.fornecedor, i.data_compra, i.caminho_nf;
     '''
     cursor = conn.cursor()
     cursor.execute(query)

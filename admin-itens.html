@@ -6,7 +6,7 @@
   <title>Statiot - Gestão de Ativos (Admin)</title>
   
   <style>
-    /* Estilo Oficial Oficina Contemporânea */
+    /* Estilo Oficina Contemporânea */
     :root {
       --bg-body: #f8f7f5;
       --bg-box: #ffffff;
@@ -24,127 +24,84 @@
       padding: 3rem 4rem;
     }
 
-    /* Cabeçalho */
     .header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-bottom: 2.5rem;
+      display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem;
     }
 
     .indicator {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--texto-cinza);
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem;
+      font-weight: 700; color: var(--texto-cinza); text-transform: uppercase; letter-spacing: 1px;
     }
+    .indicator .line { width: 24px; height: 2px; background-color: var(--ferrugem); }
+    h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; margin: 0.5rem 0 0 0; }
 
-    .indicator .line {
-      width: 24px;
-      height: 2px;
-      background-color: var(--ferrugem);
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      font-weight: 800;
-      letter-spacing: -1px;
-      margin: 0.5rem 0 0 0;
-    }
-
-    /* Botões */
+    /* Botões Padrão Index */
     .btn {
-      padding: 0.7rem 1.2rem;
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-      border-radius: 2px;
-      border: 1px solid transparent;
-      transition: all 0.2s;
-      text-decoration: none;
-      display: inline-block;
+      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+      border-radius: 2px; text-decoration: none; display: inline-flex; align-items: center;
+      justify-content: center; transition: all 0.2s ease; border: 1px solid transparent;
     }
-
-    .btn-outline { background: #fff; color: var(--texto-escuro); border-color: #ccc; }
-    .btn-outline:hover { background: #f3f4f6; }
-    
+    .btn-outline { background: #fff; color: var(--texto-escuro); border: 1px solid #ccc; }
+    .btn-outline:hover { background: #f3f4f6; border-color: var(--texto-escuro); }
     .btn-solid { background: var(--texto-escuro); color: #fff; }
     .btn-solid:hover { background: #333; }
-    
-    .btn-ferrugem { background: var(--ferrugem); color: #fff; }
-    .btn-ferrugem:hover { background: #9a3412; }
+    .btn-nf { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; padding: 0.4rem 0.8rem; font-size: 0.75rem; }
+    .btn-nf:hover { background: #fde68a; }
 
     /* Tabela */
-    .table-container {
-      background: var(--bg-box);
-      border: 1px solid var(--borda);
-      border-radius: 2px;
-      overflow-x: auto;
-    }
-
+    .table-container { background: var(--bg-box); border: 1px solid var(--borda); overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; }
-    th { padding: 1rem; font-size: 0.75rem; color: var(--texto-cinza); text-transform: uppercase; border-bottom: 1px solid var(--borda); }
-    td { padding: 1rem; font-size: 0.9rem; font-weight: 600; border-bottom: 1px solid var(--borda); }
-    
-    /* Modal (Ficha do Item) */
+    th { padding: 1.2rem 1rem; font-size: 0.75rem; color: var(--texto-cinza); text-transform: uppercase; border-bottom: 1px solid var(--borda); letter-spacing: 1px; }
+    td { padding: 1.2rem 1rem; font-size: 0.9rem; font-weight: 600; border-bottom: 1px solid var(--borda); }
+
+    /* Modal */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
+      background: rgba(17, 17, 17, 0.7); backdrop-filter: blur(3px);
       display: none; justify-content: center; align-items: center; z-index: 100;
     }
-
     .modal-content {
-      background: var(--bg-body); width: 800px; max-width: 95%;
-      border-radius: 4px; padding: 2rem; position: relative;
-      max-height: 90vh; overflow-y: auto;
+      background: #fff; width: 850px; max-width: 95%; border-radius: 4px; 
+      padding: 2.5rem; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     }
-
     .modal-header {
       display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 2px solid var(--ferrugem); padding-bottom: 1rem; margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--ferrugem); padding-bottom: 1rem; margin-bottom: 2rem;
     }
-
     .modal-header h2 { margin: 0; font-size: 1.5rem; }
-    
-    .btn-fechar {
-      background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--texto-cinza);
-    }
+    .btn-fechar { background: transparent; border: none; font-size: 1.8rem; cursor: pointer; color: var(--texto-cinza); }
+    .btn-fechar:hover { color: var(--ferrugem); }
 
-    /* Formulário em Grid */
+    /* Formulário */
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
     .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
     .form-group.full { grid-column: span 2; }
-    
-    label { font-size: 0.8rem; font-weight: 700; color: var(--texto-cinza); text-transform: uppercase; }
+    label { font-size: 0.75rem; font-weight: 700; color: var(--texto-cinza); text-transform: uppercase; }
     input { 
-      padding: 0.75rem; border: 1px solid #ccc; border-radius: 2px;
-      font-family: inherit; font-size: 0.95rem; background: #fff;
+      padding: 0.8rem; border: 1px solid var(--borda); border-radius: 2px;
+      font-family: inherit; font-size: 0.95rem; background: var(--bg-body); transition: border 0.2s;
     }
-    input:focus { outline: none; border-color: var(--texto-escuro); }
-    input:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+    input:focus { outline: none; border-color: var(--ferrugem); background: #fff; }
 
-    /* Seção de Upload */
     .upload-box {
-      border: 1px dashed #ccc; padding: 1.5rem; text-align: center; background: #fff;
-      display: flex; flex-direction: column; gap: 1rem; align-items: center;
+      border: 2px dashed #d1d5db; padding: 2rem; text-align: center; background: var(--bg-body);
+      display: flex; flex-direction: column; gap: 1rem; align-items: center; border-radius: 4px;
     }
+    hr { border: 0; border-top: 1px solid var(--borda); margin: 2.5rem 0; }
 
-    hr { border: 0; border-top: 1px solid var(--borda); margin: 2rem 0; }
+    /* Badge Valores */
+    .valor-total { font-size: 1.1rem; color: #047857; font-weight: 800; }
   </style>
 </head>
 <body>
 
   <header class="header-top">
     <div>
-      <div class="indicator"><span class="line"></span> GESTÃO AVANÇADA</div>
-      <h1>Fichas Técnicas & Custos</h1>
+      <div class="indicator"><span class="line"></span> BACKOFFICE STATIOT</div>
+      <h1>Gestão Financeira & Ativos</h1>
     </div>
     <div>
-      <a href="index.html" class="btn btn-outline">Voltar ao Sistema</a>
+      <a href="index.html" class="btn btn-outline">Voltar ao Inventário</a>
     </div>
   </header>
 
@@ -153,10 +110,12 @@
       <thead>
         <tr>
           <th>Código</th>
-          <th>Descrição do Item</th>
-          <th>Responsável</th>
-          <th>Localização</th>
-          <th>Ações</th>
+          <th>Item / Responsável</th>
+          <th>Saldo Físico</th>
+          <th>Valor Unitário</th>
+          <th>Total Imobilizado</th>
+          <th>Anexos</th>
+          <th>Gestão</th>
         </tr>
       </thead>
       <tbody>
@@ -165,11 +124,11 @@
     </table>
   </div>
 
-  <!-- MODAL DE EDIÇÃO COMPLETA -->
+  <!-- MODAL DE EDIÇÃO -->
   <div class="modal-overlay" id="modal-edicao">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Ficha do Ativo: <span id="modal-codigo-titulo"></span></h2>
+        <h2>Ficha Completa: <span id="modal-codigo-titulo" style="color: var(--ferrugem);"></span></h2>
         <button class="btn-fechar" onclick="fecharModal()">&times;</button>
       </div>
 
@@ -183,7 +142,7 @@
 
         <div class="form-group">
           <label>Estoque Mínimo *</label>
-          <input type="number" id="edit-minimo" required>
+          <input type="number" id="edit-minimo" min="1" required>
         </div>
 
         <div class="form-group">
@@ -192,13 +151,8 @@
         </div>
 
         <div class="form-group">
-          <label>Responsável</label>
-          <input type="text" id="edit-resp">
-        </div>
-
-        <div class="form-group">
-          <label>Valor Unitário (R$)</label>
-          <input type="number" id="edit-valor" step="0.01" placeholder="0.00">
+          <label>Responsável Pelo Ativo</label>
+          <input type="text" id="edit-resp" placeholder="Ex: TI, Manutenção...">
         </div>
 
         <div class="form-group">
@@ -207,23 +161,27 @@
         </div>
 
         <div class="form-group">
+          <label>Valor Unitário (R$)</label>
+          <input type="number" id="edit-valor" step="0.01" min="0" placeholder="0.00">
+        </div>
+
+        <div class="form-group">
           <label>Data de Compra</label>
           <input type="date" id="edit-data-compra">
         </div>
 
         <div class="form-group full">
-          <button type="submit" class="btn btn-solid" style="width: 100%; padding: 1rem;">Salvar Informações Gerais</button>
+          <button type="submit" class="btn btn-solid" style="width: 100%; padding: 1rem; font-size: 1rem;">Salvar Informações Gerenciais</button>
         </div>
       </form>
 
       <hr>
 
-      <!-- UPLOAD DA NOTA FISCAL -->
       <div class="upload-box">
-        <h3 style="margin: 0; font-size: 1rem;">Anexar Nota Fiscal / Comprovante</h3>
-        <p style="margin: 0; font-size: 0.8rem; color: #666;">Formatos aceitos: PDF, JPG, PNG</p>
-        <input type="file" id="nf-arquivo" accept=".pdf, image/*">
-        <button type="button" class="btn btn-ferrugem" onclick="enviarNotaFiscal()">Fazer Upload do Arquivo</button>
+        <h3 style="margin: 0; font-size: 1.1rem; color: var(--texto-escuro);">Nota Fiscal ou Garantia</h3>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--texto-cinza);">Anexe o PDF ou Imagem do comprovante de compra.</p>
+        <input type="file" id="nf-arquivo" accept=".pdf, image/*" style="background: #fff; padding: 0.5rem;">
+        <button type="button" class="btn btn-outline" style="border-color: var(--ferrugem); color: var(--ferrugem);" onclick="enviarNotaFiscal()">Subir Arquivo para o Servidor</button>
       </div>
 
     </div>
@@ -237,10 +195,12 @@
       window.location.href = "index.html";
     }
 
-    // ALTERE PARA A URL DO SEU RENDER
-    const API_URL = "http://127.0.0.1:8000"; 
+    const API_URL = "http://127.0.0.1:8000"; // ATUALIZE PARA O SEU RENDER
 
-    // Carregar a lista inicial
+    // Formata Moeda
+    const formataReal = (valor) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+
+    // Carregar Lista
     async function carregarLista() {
       try {
         const res = await fetch(`${API_URL}/api/estoque`);
@@ -249,57 +209,77 @@
         tbody.innerHTML = "";
 
         itens.forEach(item => {
-          tbody.innerHTML += `
-            <tr>
-              <td style="color: var(--ferrugem);">${item.Codigo}</td>
-              <td>${item.Item}</td>
-              <td>${item.Responsavel || '-'}</td>
-              <td>${item.Localizacao || '-'}</td>
-              <td>
-                <button class="btn btn-outline" onclick="abrirModal('${item.Codigo}', '${item.Item}', '${item.EstoqueMinimo}', '${item.Localizacao}', '${item.Responsavel}')">
-                  Ficha Completa
-                </button>
-              </td>
-            </tr>
+          const valorUnitario = parseFloat(item.valor_unitario) || 0;
+          const saldo = parseInt(item.Saldo) || 0;
+          const valorTotal = valorUnitario * saldo;
+
+          // Botão de Nota Fiscal Dinâmico
+          const btnNF = item.caminho_nf 
+            ? `<a href="${API_URL}/${item.caminho_nf.replace('\\', '/')}" target="_blank" class="btn btn-nf">📄 Ver NF</a>`
+            : `<span style="font-size: 0.75rem; color: #9ca3af;">Sem anexo</span>`;
+
+          // Garantindo que os dados não venham como 'null' na string
+          const safeData = (data) => data && data !== 'null' ? data : '';
+
+          // Cria a linha injetando os dados exatos pro Modal puxar depois
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="color: var(--ferrugem);">${item.Codigo}</td>
+            <td>
+              <strong>${item.Item}</strong><br>
+              <small style="color: var(--texto-cinza)">${safeData(item.Responsavel) || 'Sem responsável'}</small>
+            </td>
+            <td>${saldo} un</td>
+            <td>${formataReal(valorUnitario)}</td>
+            <td class="valor-total">${formataReal(valorTotal)}</td>
+            <td>${btnNF}</td>
+            <td>
+              <button class="btn btn-outline" onclick="abrirModal(
+                '${item.Codigo}', '${item.Item}', '${item.EstoqueMinimo}', 
+                '${safeData(item.Localizacao)}', '${safeData(item.Responsavel)}', 
+                '${valorUnitario}', '${safeData(item.fornecedor)}', '${safeData(item.data_compra)}'
+              )">Editar</button>
+            </td>
           `;
+          tbody.appendChild(tr);
         });
       } catch (e) {
         console.error("Erro ao carregar lista:", e);
       }
     }
 
-    // Modal
-    function abrirModal(codigo, nome, minimo, local, resp) {
+    // Modal com Recuperação Total de Dados
+    function abrirModal(codigo, nome, minimo, local, resp, valor, forn, dataCompra) {
       document.getElementById('modal-codigo-titulo').innerText = codigo;
       document.getElementById('edit-codigo').value = codigo;
       document.getElementById('edit-nome').value = nome;
       document.getElementById('edit-minimo').value = minimo;
-      document.getElementById('edit-local').value = local !== 'null' ? local : '';
-      document.getElementById('edit-resp').value = resp !== 'null' ? resp : '';
-      
-      // Limpa os campos financeiros (como ainda não temos uma rota GET específica para eles, partimos do zero ou o admin atualiza)
-      document.getElementById('edit-valor').value = '';
-      document.getElementById('edit-fornecedor').value = '';
-      document.getElementById('edit-data-compra').value = '';
-      document.getElementById('nf-arquivo').value = '';
+      document.getElementById('edit-local').value = local;
+      document.getElementById('edit-resp').value = resp;
+      document.getElementById('edit-valor').value = valor !== "0" ? valor : "";
+      document.getElementById('edit-fornecedor').value = forn;
+      document.getElementById('edit-data-compra').value = dataCompra;
+      document.getElementById('nf-arquivo').value = ''; 
 
       document.getElementById('modal-edicao').style.display = 'flex';
     }
 
-    function fecharModal() {
-      document.getElementById('modal-edicao').style.display = 'none';
-    }
+    function fecharModal() { document.getElementById('modal-edicao').style.display = 'none'; }
 
-    // Salvar Dados via PUT (Rota Completa)
+    // Salvar Dados
     document.getElementById('form-admin').addEventListener('submit', async (e) => {
       e.preventDefault();
       const codigo = document.getElementById('edit-codigo').value;
+      
+      let valorInput = parseFloat(document.getElementById('edit-valor').value);
+      if (valorInput < 0) { alert("O valor não pode ser negativo."); return; } // Dupla checagem no front
+
       const payload = {
         nome: document.getElementById('edit-nome').value,
         estoque_minimo: parseInt(document.getElementById('edit-minimo').value),
         localizacao: document.getElementById('edit-local').value || "Geral",
         responsavel: document.getElementById('edit-resp').value || null,
-        valor_unitario: parseFloat(document.getElementById('edit-valor').value) || 0.0,
+        valor_unitario: valorInput || 0.0,
         fornecedor: document.getElementById('edit-fornecedor').value || null,
         data_compra: document.getElementById('edit-data-compra').value || null
       };
@@ -315,52 +295,36 @@
         });
 
         if(res.ok) {
-          alert("Ficha técnica atualizada com sucesso!");
-          carregarLista();
-        } else {
-          alert("Erro ao atualizar o item.");
-        }
-      } catch (erro) {
-        console.error(erro);
-        alert("Falha de conexão.");
-      } finally {
-        e.target.querySelector('button').textContent = "Salvar Informações Gerais";
-      }
+          fecharModal();
+          carregarLista(); // Recarrega a tabela em tempo real
+        } else { alert("Erro ao atualizar o item."); }
+      } catch (erro) { alert("Falha de conexão."); } 
+      finally { e.target.querySelector('button').textContent = "Salvar Informações Gerenciais"; }
     });
 
-    // Upload de Nota Fiscal (Rota Multipart/Form-Data)
+    // Upload NF
     async function enviarNotaFiscal() {
       const codigo = document.getElementById('edit-codigo').value;
       const arquivoInput = document.getElementById('nf-arquivo');
       
-      if (!arquivoInput.files[0]) {
-        alert("Por favor, selecione um arquivo primeiro.");
-        return;
-      }
+      if (!arquivoInput.files[0]) { alert("Selecione um arquivo primeiro."); return; }
 
       const formData = new FormData();
       formData.append("arquivo", arquivoInput.files[0]);
 
       try {
         const res = await fetch(`${API_URL}/api/admin/itens/${codigo}/upload-nf`, {
-          method: "POST",
-          body: formData
+          method: "POST", body: formData
         });
 
         if(res.ok) {
-          const data = await res.json();
-          alert(`Upload concluído! Arquivo salvo como: ${data.arquivo}`);
-          arquivoInput.value = ''; // Limpa o input
-        } else {
-          alert("Erro ao processar o upload.");
-        }
-      } catch (e) {
-        console.error(e);
-        alert("Erro de conexão ao enviar arquivo.");
-      }
+          alert("Arquivo salvo com sucesso!");
+          arquivoInput.value = ''; 
+          carregarLista(); // Atualiza a tela pra aparecer o botão "Ver NF"
+        } else { alert("Erro ao processar o upload."); }
+      } catch (e) { alert("Erro de conexão."); }
     }
 
-    // Init
     carregarLista();
   </script>
 </body>
