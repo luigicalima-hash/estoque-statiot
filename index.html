@@ -741,63 +741,56 @@
           }
         });
 
-      document
-        .getElementById("form-mov")
-        .addEventListener("submit", async evento => {
-          evento.preventDefault();
-          const perfilAtual = (localStorage.getItem('statiot_user_role') || 'viewer').trim().toLowerCase();
-          
-          if (perfilAtual !== 'admin' && perfilAtual !== 'operador') {
-            alert('Acesso negado: Seu perfil não possui permissão para realizar lançamentos.');
-            return;
-          }
+      document.getElementById("form-mov").addEventListener("submit", async evento => {
+        evento.preventDefault();
+        const perfilAtual = (localStorage.getItem('statiot_user_role') || 'viewer').trim().toLowerCase();
+        
+        if (perfilAtual !== 'admin' && perfilAtual !== 'operador') {
+          alert('Acesso negado: Seu perfil não possui permissão para realizar lançamentos.');
+          return;
+        }
 
-          const quantidade = parseInt(
-            document.getElementById("mov-qtd").value,
-            10
-          );
-          const botao = evento.currentTarget.querySelector(
-            'button[type="submit"]'
-          );
-          if (!quantidade || quantidade <= 0) {
-            alert("Insira uma quantidade válida, maior que zero.");
-            return;
+        const quantidade = parseInt(document.getElementById("mov-qtd").value, 10);
+        const botao = evento.currentTarget.querySelector('button[type="submit"]');
+        
+        if (!quantidade || quantidade <= 0) {
+          alert("Insira uma quantidade válida, maior que zero.");
+          return;
+        }
+        
+        try {
+          botao.disabled = true;
+          botao.querySelector("span").textContent = "Registrando";
+          
+          // Requisição atualizada enviando o campo "usuario" do LocalStorage
+          const resposta = await fetch(`${API_URL}/api/movimentacoes`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              codigo_item: document.getElementById("mov-codigo").value,
+              tipo: document.querySelector('input[name="mov-tipo"]:checked').value,
+              quantidade: quantidade,
+              usuario: localStorage.getItem('statiot_user_name') || 'Sistema'
+            }),
+          });
+          
+          if (!resposta.ok) {
+            const erro = await resposta.json();
+            throw new Error(erro.detail || "Não foi possível registrar o lançamento.");
           }
-          try {
-            botao.disabled = true;
-            botao.querySelector("span").textContent = "Registrando";
-            const resposta = await fetch(`${API_URL}/api/movimentacoes`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                codigo_item: document.getElementById("mov-codigo").value,
-                tipo: document.querySelector('input[name="mov-tipo"]:checked')
-                  .value,
-                quantidade,
-              }),
-            });
-            if (!resposta.ok) {
-              const erro = await resposta.json();
-              throw new Error(
-                erro.detail || "Não foi possível registrar o lançamento."
-              );
-            }
-            alert("Movimentação registrada com sucesso!");
-            evento.currentTarget?.reset();
-            document.querySelector(
-              'input[name="mov-tipo"][value="Entrada"]'
-            ).checked = true;
-            atualizarTipoMovimentacao();
-            carregarEstoque();
-          } catch (erro) {
-            alert(
-              `Erro: ${erro.message || "Não foi possível registrar a movimentação."}`
-            );
-          } finally {
-            botao.disabled = false;
-            botao.querySelector("span").textContent = "Registrar lançamento";
-          }
-        });
+          
+          alert("Movimentação registrada com sucesso!");
+          evento.currentTarget?.reset();
+          document.querySelector('input[name="mov-tipo"][value="Entrada"]').checked = true;
+          atualizarTipoMovimentacao();
+          carregarEstoque();
+        } catch (erro) {
+          alert(`Erro: ${erro.message || "Não foi possível registrar a movimentação."}`);
+        } finally {
+          botao.disabled = false;
+          botao.querySelector("span").textContent = "Registrar lançamento";
+        }
+      });
 
       // Gerenciamento visual de perfis e Layout Dinâmico
       document.addEventListener("DOMContentLoaded", () => {

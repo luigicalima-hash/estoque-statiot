@@ -55,6 +55,7 @@ def init_db():
     except sqlite3.OperationalError:
         pass
 
+    # 1. Cria a tabela de movimentações primeiro
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS movimentacoes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,6 +66,12 @@ def init_db():
             FOREIGN KEY (codigo_item) REFERENCES itens (codigo)
         )
     ''')
+
+    # 2. Depois faz a migração da coluna usuario com segurança
+    try:
+        cursor.execute("ALTER TABLE movimentacoes ADD COLUMN usuario TEXT DEFAULT 'Sistema'")
+    except sqlite3.OperationalError:
+        pass  # A coluna já existe
 
     # Dados iniciais de itens
     cursor.execute("INSERT OR IGNORE INTO itens (codigo, nome, estoque_minimo, localizacao, responsavel) VALUES ('M8x30', 'Parafuso sextavado M8x30', 200, 'Prateleira A - Setor 02', NULL)")
@@ -96,6 +103,7 @@ class MovimentacaoCreate(BaseModel):
     codigo_item: str
     tipo: str
     quantidade: int = Field(..., gt=0)
+    usuario: str = "Sistema"  # Novo campo adicionado
 
 class ItemUpdate(BaseModel):
     nome: str
@@ -181,7 +189,8 @@ def get_estoque():
 def get_historico_item(codigo: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT data, tipo, quantidade FROM movimentacoes WHERE codigo_item = ? ORDER BY id DESC", (codigo,))
+    # Adicionado o campo 'usuario' no SELECT
+    cursor.execute("SELECT data, tipo, quantidade, usuario FROM movimentacoes WHERE codigo_item = ? ORDER BY id DESC", (codigo,))
     rows = [dict(row) for row in cursor.fetchall()]
     conn.close()
     return rows
@@ -210,7 +219,7 @@ def criar_movimentacao(mov: MovimentacaoCreate):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # 1. Verifica se o item existe no cadastro
+    # Verifica se o item existe
     codigo_limpo = mov.codigo_item.strip()
     cursor.execute("SELECT codigo FROM itens WHERE LOWER(codigo) = LOWER(?)", (codigo_limpo,))
     item_encontrado = cursor.fetchone()
@@ -221,7 +230,7 @@ def criar_movimentacao(mov: MovimentacaoCreate):
     
     codigo_real = item_encontrado["codigo"]
     
-    # 2. NOVA REGRA DE NEGÓCIO: Bloquear saída se não houver saldo suficiente
+    # Bloqueia saída se não houver saldo suficiente
     if mov.tipo == "Saída":
         cursor.execute('''
             SELECT 
@@ -234,7 +243,6 @@ def criar_movimentacao(mov: MovimentacaoCreate):
         resultado = cursor.fetchone()
         saldo_atual = resultado["saldo"] if resultado else 0
         
-        # Se a pessoa tentar tirar mais do que tem, bloqueia!
         if mov.quantidade > saldo_atual:
             conn.close()
             raise HTTPException(
@@ -242,11 +250,11 @@ def criar_movimentacao(mov: MovimentacaoCreate):
                 detail=f"Saldo insuficiente! Você tem {saldo_atual} unidades no estoque, mas tentou retirar {mov.quantidade}."
             )
     
-    # 3. Registra a movimentação caso passe pela validação
+    # Registra a movimentação com a data, quantidades e o USUÁRIO
     data_atual = str(date.today())
     cursor.execute(
-        "INSERT INTO movimentacoes (data, codigo_item, tipo, quantidade) VALUES (?, ?, ?, ?)",
-        (data_atual, codigo_real, mov.tipo, mov.quantidade)
+        "INSERT INTO movimentacoes (data, codigo_item, tipo, quantidade, usuario) VALUES (?, ?, ?, ?, ?)",
+        (data_atual, codigo_real, mov.tipo, mov.quantidade, mov.usuario)
     )
     conn.commit()
     conn.close()
