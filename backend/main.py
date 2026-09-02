@@ -18,22 +18,10 @@ import csv
 
 app = FastAPI(title="Statiot Inventory API")
 
-# Libera a pasta de notas fiscais para o navegador acessar os PDFs
+import os
+os.makedirs("notas_fiscais", exist_ok=True)
+
 app.mount("/notas_fiscais", StaticFiles(directory="notas_fiscais"), name="notas_fiscais")
-
-# ... (seu código de banco de dados continua igual) ...
-
-# Atualize o modelo do Admin para barrar valores negativos no backend
-class ItemAdminUpdate(BaseModel):
-    nome: str
-    estoque_minimo: int
-    localizacao: str
-    responsavel: Optional[str] = None
-    valor_unitario: float = Field(default=0.0, ge=0.0) # <--- Impede negativo
-    fornecedor: Optional[str] = None
-    data_compra: Optional[str] = None
-    validade_garantia: Optional[str] = None
-    nota_fiscal: Optional[str] = None
 
 app.add_middleware(
     CORSMiddleware,
@@ -63,6 +51,9 @@ def init_db():
             responsavel TEXT DEFAULT NULL
         )
     ''')
+
+
+
 
     # Migrações de segurança caso as colunas novas não existam em bancos antigos
     try:
@@ -130,6 +121,18 @@ def init_db():
 
 # Inicializa o banco de itens e movimentações
 init_db()
+
+# Atualize o modelo do Admin para barrar valores negativos no backend
+class ItemAdminUpdate(BaseModel):
+    nome: str
+    estoque_minimo: int
+    localizacao: str
+    responsavel: Optional[str] = None
+    valor_unitario: float = Field(default=0.0, ge=0.0) # <--- Impede negativo
+    fornecedor: Optional[str] = None
+    data_compra: Optional[str] = None
+    validade_garantia: Optional[str] = None
+    nota_fiscal: Optional[str] = None
 
 # O ItemCreate original continua simples para o operador não travar
 class ItemCreate(BaseModel):
