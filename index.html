@@ -369,24 +369,6 @@
           </button>
         </section>
 
-        <!-- SEÇÃO EXCLUSIVA DE GRÁFICOS ANALÍTICOS (Visível apenas para Admin por segurança) -->
-        <section class="analytics-section" id="secao-analytics" data-role="admin">
-          <div class="analytics-card">
-            <span class="eyebrow">ANÁLISE / 01</span>
-            <h3>Status do Inventário</h3>
-            <div class="chart-container">
-              <canvas id="statusChart"></canvas>
-            </div>
-          </div>
-          <div class="analytics-card" style="border-top-color: var(--ink);">
-            <span class="eyebrow">ANÁLISE / 02</span>
-            <h3>Fluxo de Movimentações</h3>
-            <div class="chart-container">
-              <canvas id="flowChart"></canvas>
-            </div>
-          </div>
-        </section>
-
         <section class="operations-grid" aria-label="Lançamentos de estoque">
           <article class="operation-card card-register" data-role="admin, operador">              
             <div class="card-heading">
@@ -641,11 +623,6 @@
         document.getElementById("total-replenish").textContent =
           formatarNumero(reposicao);
 
-        // Atualiza os gráficos se o usuário for Admin
-        const roleAtual = localStorage.getItem('statiot_user_role') || 'viewer';
-        if (roleAtual === 'admin') {
-          renderizarGraficos(regulares, reposicao);
-        }
       }
 
       function renderizarGraficos(regulares, reposicao) {

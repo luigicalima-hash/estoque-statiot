@@ -1,350 +1,344 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Statiot - Painel de Auditoria</title>
-  
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-    /* Estilo Oficial Oficina Contemporânea (Baseado na UI principal) */
-    :root {
-      --bg-body: #f8f7f5;
-      --bg-tabela: #ffffff;
-      --texto-escuro: #111111;
-      --texto-cinza: #6b7280;
-      --ferrugem: #c2410c; 
-      --borda: #e5e7eb;
-      --verde-badge: #065f46;
-      --verde-bg: #d1fae5;
-      --vermelho-badge: #991b1b;
-      --vermelho-bg: #fee2e2;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-body);
-      color: var(--texto-escuro);
-      margin: 0;
-      padding: 3rem 4rem;
-    }
-
-    /* Cabeçalho espelhando a tela de Saldo Atual */
-    .header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-bottom: 2.5rem;
-    }
-
-    .titles-wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .indicator {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: var(--texto-cinza);
-      text-transform: uppercase;
-    }
-
-    .indicator .line {
-      width: 24px;
-      height: 2px;
-      background-color: var(--ferrugem);
-    }
-
-    h1 {
-      font-size: 2.8rem;
-      font-weight: 800;
-      letter-spacing: -1px;
-      margin: 0;
-      color: var(--texto-escuro);
-    }
-
-    /* Botões Padrão Statiot */
-    .btn-group {
-      display: flex;
-      gap: 1rem;
-    }
-
-    .btn {
-      padding: 0.7rem 1.2rem;
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-      border-radius: 2px; /* Cantos quase retos */
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      transition: all 0.2s;
-    }
-
-    .btn-outline {
-      background-color: #fff;
-      color: var(--texto-escuro);
-      border: 1px solid #ccc;
-    }
-
-    .btn-outline:hover {
-      background-color: #f3f4f6;
-    }
-
-    .btn-solid {
-      background-color: var(--texto-escuro);
-      color: #fff;
-      border: 1px solid var(--texto-escuro);
-    }
-
-    .btn-solid:hover {
-      background-color: #333;
-    }
-
-    /* Grid do Dashboard */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 250px 1fr;
-      gap: 3rem;
-      align-items: start;
-    }
-
-    /* Gráfico */
-    .chart-box {
-      background: var(--bg-tabela);
-      padding: 1.5rem;
-      border: 1px solid var(--borda);
-      border-radius: 2px;
-    }
-
-    .chart-box h3 {
-      margin-top: 0;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      color: var(--texto-cinza);
-      letter-spacing: 1px;
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--borda);
-    }
-
-    /* Tabela Idêntica à principal */
-    .table-container {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
-
-    thead {
-      border-top: 1px solid var(--borda);
-      border-bottom: 1px solid var(--borda);
-    }
-
-    th {
-      padding: 1rem 0.5rem;
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--texto-cinza);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-    }
-
-    td {
-      padding: 1.2rem 0.5rem;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--texto-escuro);
-      background-color: var(--bg-tabela);
-      border-bottom: 1px solid var(--borda);
-    }
-
-    td.muted {
-      color: var(--texto-cinza);
-      font-weight: 500;
-    }
-
-    /* Badges de Status / Ação */
-    .badge {
-      padding: 0.3rem 0.6rem;
-      border-radius: 2px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      border: 1px solid transparent;
-      display: inline-block;
-    }
-
-    .badge-entrada { 
-      background-color: var(--verde-bg); 
-      color: var(--verde-badge); 
-      border-color: #a7f3d0;
-    }
-    
-    .badge-saida { 
-      background-color: var(--vermelho-bg); 
-      color: var(--vermelho-badge); 
-      border-color: #fecaca;
-    }
-
-    @media (max-width: 1024px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#191919" />
+    <meta name="description" content="Statiot — Painel Administrativo e Auditoria." />
+    <title>Statiot — Painel Administrativo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      .brand-mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--line);
+        padding: 6px 10px;
+        border-radius: 4px;
       }
-      body {
-        padding: 2rem;
+      .brand-mark img {
+        height: 22px;
+        width: auto;
+        object-fit: contain;
+        display: block;
       }
-    }
-  </style>
-</head>
-<body>
-
-  <header class="header-top">
-    <div class="titles-wrapper">
-      <div class="indicator">
-        <span class="line"></span> 
-        AUDITORIA &nbsp;&nbsp; RASTREABILIDADE EM TEMPO REAL
-      </div>
-      <h1>Painel Administrativo</h1>
-    </div>
-    
-    <div class="btn-group">
-      <a href="index.html" class="btn btn-outline">Voltar ao Sistema</a>
-    </div>
-  </header>
-
-  <div class="dashboard-grid">
-    
-    <!-- Gráfico Lateral -->
-    <div class="chart-box">
-      <h3>Volume por Usuário</h3>
-      <canvas id="graficoUsuarios"></canvas>
-    </div>
-
-    <!-- Tabela Principal -->
-    <div class="table-container">
-      <table id="tabela-auditoria">
-        <thead>
-          <tr>
-            <th>ID / Data</th>
-            <th>Código / Item</th>
-            <th>Ação</th>
-            <th>Qtd</th>
-            <th>Usuário Responsável</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Preenchido via JavaScript -->
-        </tbody>
-      </table>
-    </div>
-
-  </div>
-
-  <script>
-    // 1. Verificação de segurança (Admin)
-    const role = (localStorage.getItem('statiot_user_role') || '').trim().toLowerCase();
-    if (role !== 'admin') {
-      alert("Acesso Negado: Apenas administradores possuem acesso à auditoria.");
-      window.location.href = "index.html";
-    }
-
-    // URL da sua API
-    const API_URL = "https://estoque-statiot.onrender.com"; 
-    let myChart = null;
-
-    // Função de formatação de data (opcional, para deixar mais clean)
-    function formatarData(dataString) {
-      if (!dataString) return '-';
-      const partes = dataString.split('-');
-      if(partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
-      return dataString;
-    }
-
-    async function carregarAuditoria() {
-      try {
-        const resposta = await fetch(`${API_URL}/api/admin/auditoria`);
-        if (!resposta.ok) throw new Error("Erro ao buscar dados do servidor");
-        
-        const dados = await resposta.json();
-        renderizarTabela(dados.movimentacoes);
-        renderizarGrafico(dados.ranking);
-        
-      } catch (erro) {
-        console.error(erro);
-        alert("Falha ao carregar o painel de auditoria.");
+      
+      .analytics-section {
+        margin-top: 45px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
       }
-    }
+      .analytics-card {
+        background: var(--paper);
+        border-top: 3px solid var(--signal);
+        padding: 25px;
+        box-shadow: var(--shadow-short);
+      }
+      .analytics-card h3 {
+        margin: 5px 0 20px;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.1rem;
+        letter-spacing: -0.04em;
+        color: var(--ink);
+      }
+      .chart-container {
+        position: relative;
+        height: 220px;
+        width: 100%;
+      }
+      @media (max-width: 1050px) {
+        .analytics-section {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="brand-rail" aria-label="Identidade do Statiot">
+        <div class="rail-grid" aria-hidden="true"></div>
+        <div class="rail-content">
+          <a class="brand-lockup" href="index.html" aria-label="Statiot, ir para operações">
+            <span class="brand-mark">
+              <img src="log-png.png" alt="Logo Statiot" onerror="this.style.display='none'" />
+            </span>
+            <span class="brand-wordmark">Statiot</span>
+          </a>
 
-    function renderizarTabela(movimentacoes) {
-      const tbody = document.querySelector("#tabela-auditoria tbody");
-      tbody.innerHTML = "";
+          <div class="rail-title-block">
+            <span class="eyebrow eyebrow-light">PAINEL ADMINISTRATIVO</span>
+            <p>Auditoria e rastreabilidade total de ativos.</p>
+          </div>
 
-      movimentacoes.forEach(mov => {
-        const tr = document.createElement("tr");
-        const badgeClass = mov.tipo === "Entrada" ? "badge-entrada" : "badge-saida";
-        const icon = mov.tipo === "Entrada" ? "↓" : "↑";
+          <nav class="rail-nav" aria-label="Atalhos de administração">
+            <a href="dashboard-admin.html" class="rail-link rail-link-active">
+              <i class="fa-solid fa-chart-line"></i><span>Auditoria</span>
+              <i class="fa-solid fa-chevron-right chevron"></i>
+            </a>
+            <a href="admin-itens.html" class="rail-link">
+              <i class="fa-solid fa-file-invoice-dollar"></i><span>Fichas & Custos</span>
+              <i class="fa-solid fa-chevron-right chevron"></i>
+            </a>
+            <a href="usuarios.html" class="rail-link">
+              <i class="fa-solid fa-users-gear"></i><span>Usuários</span>
+              <i class="fa-solid fa-chevron-right chevron"></i>
+            </a>
+            <a href="index.html" class="rail-link">
+              <i class="fa-solid fa-arrow-left"></i><span>Voltar ao Sistema</span>
+              <i class="fa-solid fa-chevron-right chevron"></i>
+            </a>
+          </nav>
+
+          <div class="rail-status">
+            <span class="status-pulse"></span>Acesso Restrito Admin
+          </div>
+        </div>
+        <span class="rail-index">ADMIN — 26</span>
+      </aside>
+
+      <main class="workspace" id="operacao">
+        <header class="mobile-brandbar">
+          <a class="brand-lockup" href="index.html" aria-label="Statiot, ir para operações">
+            <span class="brand-mark">
+              <img src="log-png.png" alt="Logo Statiot" onerror="this.style.display='none'" />
+            </span>
+            <span class="brand-wordmark">Statiot</span>
+          </a>
+          <span class="mobile-status"><span class="status-pulse"></span> Admin</span>
+        </header>
+
+        <!-- Cabeçalho limpo e direto, sem slogans -->
+        <section class="workspace-header" style="grid-template-columns: 1fr; min-height: auto;" aria-labelledby="page-title">
+          <div class="header-copy" style="padding: 44px 0 24px;">
+            <div class="section-marker">
+              <span>ADMINISTRAÇÃO</span><span>AUDITORIA / 02</span>
+            </div>
+            <h1 id="page-title" style="margin: 12px 0 0;">
+              Auditoria e Rastreabilidade
+            </h1>
+          </div>
+        </section>
+
+        <!-- SEÇÃO DE GRÁFICOS ANALÍTICOS -->
+        <section class="analytics-section">
+          <div class="analytics-card">
+            <span class="eyebrow">ANÁLISE / 01</span>
+            <h3>Volume por Usuário</h3>
+            <div class="chart-container">
+              <canvas id="graficoUsuarios"></canvas>
+            </div>
+          </div>
+          <div class="analytics-card">
+            <span class="eyebrow">ANÁLISE / 02</span>
+            <h3>Status do Inventário</h3>
+            <div class="chart-container">
+              <canvas id="graficoStatus"></canvas>
+            </div>
+          </div>
+          <div class="analytics-card" style="border-top-color: var(--ink);">
+            <span class="eyebrow">ANÁLISE / 03</span>
+            <h3>Fluxo Real (Últimos Dias)</h3>
+            <div class="chart-container">
+              <canvas id="graficoFluxo"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <section class="inventory-section" id="inventario" aria-labelledby="inventory-title">
+          <div class="inventory-title-row">
+            <div>
+              <div class="section-marker">
+                <span>LOGS DE SISTEMA</span><span>HISTÓRICO RECENTE</span>
+              </div>
+              <h2 id="inventory-title">Rastreabilidade de ativos</h2>
+            </div>
+          </div>
+
+          <div class="table-shell" style="margin-top: 23px;">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID / Data</th>
+                    <th>Código / Item</th>
+                    <th>Ação</th>
+                    <th class="number-cell">Qtd</th>
+                    <th>Usuário Responsável</th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-auditoria">
+                  <tr>
+                    <td colspan="5">
+                      <div class="empty-state">
+                        Carregando relatórios de auditoria…
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <footer class="workspace-footer">
+          <span>STATIOT / AUDIT SYSTEMS</span><span>© 2026 — CONTROLE GERENCIAL</span>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      const role = (localStorage.getItem('statiot_user_role') || '').trim().toLowerCase();
+      if (role !== 'admin') {
+        alert("Acesso Negado: Apenas administradores possuem acesso à auditoria.");
+        window.location.href = "index.html";
+      }
+
+      const API_URL = "https://estoque-statiot.onrender.com"; 
+      
+      let chartUsuarios = null;
+      let chartStatus = null;
+      let chartFluxo = null;
+
+      function formatarData(dataString) {
+        if (!dataString) return '-';
+        const partes = dataString.split('-');
+        if(partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        return dataString;
+      }
+
+      async function carregarDashboard() {
+        try {
+          const resAuditoria = await fetch(`${API_URL}/api/admin/auditoria`);
+          const dadosAuditoria = await resAuditoria.json();
+          
+          const resEstoque = await fetch(`${API_URL}/api/estoque`);
+          const dadosEstoque = await resEstoque.json();
+
+          renderizarTabela(dadosAuditoria.movimentacoes);
+          renderizarGraficoUsuarios(dadosAuditoria.ranking);
+          renderizarGraficoStatus(dadosEstoque);
+          renderizarGraficoFluxo(dadosAuditoria.movimentacoes);
+          
+        } catch (erro) {
+          console.error(erro);
+          document.querySelector("#tabela-auditoria").innerHTML =
+            '<tr><td colspan="5"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Erro ao carregar dados</strong><p>Verifique a conexão com a API.</p></div></div></td></tr>';
+        }
+      }
+
+      function renderizarTabela(movimentacoes) {
+        const tbody = document.querySelector("#tabela-auditoria");
+        tbody.innerHTML = "";
+
+        if (!movimentacoes || movimentacoes.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Nenhum registro de auditoria encontrado.</div></td></tr>';
+          return;
+        }
+
+        movimentacoes.forEach(mov => {
+          const tr = document.createElement("tr");
+          const badgeClass = mov.tipo === "Entrada" ? "status-ok" : "status-replenish";
+          const icon = mov.tipo === "Entrada" ? "fa-check" : "fa-triangle-exclamation";
+          
+          tr.innerHTML = `
+            <td class="item-code">#${mov.id} <br><small style="color: var(--steel);">${formatarData(mov.data)}</small></td>
+            <td><strong class="item-name">${mov.codigo_item}</strong><br><small style="color: var(--steel);">${mov.nome_item || 'Desconhecido'}</small></td>
+            <td><span class="status-badge ${badgeClass}"><i class="fa-solid ${icon}"></i>${mov.tipo}</span></td>
+            <td class="number-cell"><strong>${mov.quantidade}</strong></td>
+            <td><span class="location-cell"><i class="fa-solid fa-user"></i> ${mov.usuario || 'Sistema'}</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function renderizarGraficoUsuarios(ranking) {
+        const ctx = document.getElementById('graficoUsuarios').getContext('2d');
+        const labels = ranking.map(r => r.usuario || 'Sistema');
+        const valores = ranking.map(r => r.total_movimentacoes);
+
+        if (chartUsuarios) chartUsuarios.destroy();
+        chartUsuarios = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{ data: valores, backgroundColor: ['#191919', '#bd5e3c', '#6f716d', '#d5d5ce'], borderWidth: 0 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Space Grotesk', size: 11 } } } } }
+        });
+      }
+
+      function renderizarGraficoStatus(itens) {
+        const reposicao = itens.filter(i => i.Status === "Repor").length;
+        const regulares = itens.length - reposicao;
+
+        const ctx = document.getElementById('graficoStatus').getContext('2d');
+        if (chartStatus) chartStatus.destroy();
+        chartStatus = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Regular', 'Repor'],
+            datasets: [{ data: [regulares, reposicao], backgroundColor: ['#36735d', '#b54232'], borderWidth: 0 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Space Grotesk', size: 11 } } } } }
+        });
+      }
+
+      function renderizarGraficoFluxo(movimentacoes) {
+        const fluxoDiario = {};
         
-        tr.innerHTML = `
-          <td>
-            #${mov.id} <br>
-            <small class="muted">${formatarData(mov.data)}</small>
-          </td>
-          <td>
-            ${mov.codigo_item} <br>
-            <small class="muted">${mov.nome_item || 'Desconhecido'}</small>
-          </td>
-          <td><span class="badge ${badgeClass}">${icon} ${mov.tipo}</span></td>
-          <td>${mov.quantidade}</td>
-          <td>${mov.usuario || 'Sistema'}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
+        [...movimentacoes].reverse().forEach(mov => {
+          const dataFormatada = formatarData(mov.data).substring(0, 5);
+          if (!fluxoDiario[dataFormatada]) {
+            fluxoDiario[dataFormatada] = { entrada: 0, saida: 0 };
+          }
+          if (mov.tipo === 'Entrada') fluxoDiario[dataFormatada].entrada += mov.quantidade;
+        });
 
-    function renderizarGrafico(ranking) {
-      const ctx = document.getElementById('graficoUsuarios').getContext('2d');
-      const labels = ranking.map(r => r.usuario || 'Sistema');
-      const valores = ranking.map(r => r.total_movimentacoes);
+        [...movimentacoes].reverse().forEach(mov => {
+          const dataFormatada = formatarData(mov.data).substring(0, 5);
+          if (mov.tipo === 'Saída') fluxoDiario[dataFormatada].saida += mov.quantidade;
+        });
 
-      if (myChart) myChart.destroy();
+        const labels = Object.keys(fluxoDiario).slice(-7);
+        const entradas = labels.map(data => fluxoDiario[data].entrada);
+        const saidas = labels.map(data => fluxoDiario[data].saida);
 
-      myChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: valores,
-            backgroundColor: ['#111111', '#c2410c', '#9ca3af', '#e5e7eb'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          cutout: '75%', // Deixa o gráfico mais fino e elegante
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                font: { family: 'Inter', size: 11 },
-                color: '#6b7280'
-              }
+        const ctx = document.getElementById('graficoFluxo').getContext('2d');
+        if (chartFluxo) chartFluxo.destroy();
+        chartFluxo = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              { label: 'Entradas', data: entradas, backgroundColor: '#36735d', borderRadius: 2 },
+              { label: 'Saídas', data: saidas, backgroundColor: '#b54232', borderRadius: 2 }
+            ]
+          },
+          options: { 
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Space Grotesk', size: 10 } } } },
+            scales: {
+              y: { beginAtZero: true, grid: { color: '#e2e2dc' }, ticks: { font: { family: 'Space Grotesk', size: 10 } } },
+              x: { grid: { display: false }, ticks: { font: { family: 'Space Grotesk', size: 10 } } }
             }
           }
-        }
-      });
-    }
+        });
+      }
 
-    carregarAuditoria();
-  </script>
-</body>
+      carregarDashboard();
+    </script>
+  </body>
 </html>
